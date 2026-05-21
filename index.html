@@ -1,0 +1,2898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAGNEX — Modern 2D Magnetic Tabletop Physics Game</title>
+    <!-- Modern Premium Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           1. MODERN NEON DESIGN SYSTEM & CSS TOKENS
+           ========================================================================== */
+        :root {
+            --bg-dark: #070913;
+            --bg-darker: #030408;
+            --p1-color: hsl(190, 100%, 50%); /* Neon Cyan */
+            --p1-glow: rgba(0, 240, 255, 0.4);
+            --p2-color: hsl(350, 100%, 55%); /* Neon Rose/Red */
+            --p2-glow: rgba(255, 25, 75, 0.4);
+            --gold-color: hsl(45, 100%, 55%); /* Neon Gold */
+            --gold-glow: rgba(255, 190, 50, 0.4);
+            --stone-color: #ffffff;
+            --stone-glow: rgba(255, 255, 255, 0.4);
+            --text-light: #f3f4f6;
+            --text-gray: #8e96aa;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: rgba(0, 0, 0, 0.5);
+            --font-family: 'Outfit', sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-darker);
+            background-image: 
+                radial-gradient(circle at 50% 10%, #151a3a 0%, #070913 60%, #030408 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ambient glowing circles in the background */
+        .ambient-glow {
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(120px);
+            opacity: 0.15;
+            transition: all 1s ease;
+        }
+        #glow-left {
+            left: 10%;
+            top: 20%;
+            background: var(--p1-color);
+        }
+        #glow-right {
+            right: 10%;
+            bottom: 20%;
+            background: var(--p2-color);
+        }
+
+        /* Screen Container */
+        .screen-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Glassmorphism Panel base */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px var(--glass-shadow);
+            z-index: 10;
+        }
+
+        /* ==========================================================================
+           2. SCREEN 1: START MENU
+           ========================================================================== */
+        #start-screen {
+            flex-direction: column;
+            gap: 30px;
+            text-align: center;
+        }
+
+        .menu-card {
+            padding: 50px 60px;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .logo-container {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .logo-text {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(165, 180, 252, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            color: var(--p1-color);
+            filter: blur(12px);
+            opacity: 0.6;
+            z-index: 1;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-gray);
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: -15px;
+        }
+
+        /* Modern Glowing Buttons */
+        .btn {
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: all var(--transition-speed) cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.08),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(255, 25, 75, 0.15));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.02);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 0 25px rgba(0, 240, 255, 0.25),
+                0 0 40px rgba(255, 25, 75, 0.15);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Background floating passive Canvas */
+        #menu-bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           3. SCREEN 2: GAMEPLAY BOARD
+           ========================================================================== */
+        #game-screen {
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            gap: 20px;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Turn Indicator */
+        .turn-banner {
+            grid-column: 1 / -1;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border-radius: 14px;
+            text-align: center;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.02);
+        }
+
+        .turn-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--p1-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .turn-p1 {
+            color: var(--p1-color);
+            border-color: rgba(0, 240, 255, 0.2);
+            text-shadow: 0 0 10px var(--p1-glow);
+        }
+        .turn-p1::after {
+            background: var(--p1-color);
+            box-shadow: 0 0 10px var(--p1-color);
+        }
+
+        .turn-p2 {
+            color: var(--p2-color);
+            border-color: rgba(255, 25, 75, 0.2);
+            text-shadow: 0 0 10px var(--p2-glow);
+        }
+        .turn-p2::after {
+            background: var(--p2-color);
+            box-shadow: 0 0 10px var(--p2-color);
+        }
+
+        .turn-simulating {
+            color: var(--gold-color);
+            border-color: rgba(255, 190, 50, 0.2);
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+        .turn-simulating::after {
+            background: var(--gold-color);
+            box-shadow: 0 0 10px var(--gold-color);
+        }
+
+        /* Sidebar Panels */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .card-stats {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+            border-radius: 20px;
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-gray);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .card-p1 {
+            border-left: 4px solid var(--p1-color);
+        }
+        .card-p2 {
+            border-left: 4px solid var(--p2-color);
+        }
+
+        /* Pool Indicator Panel */
+        .pool-card {
+            padding: 20px;
+            text-align: center;
+            border-radius: 20px;
+        }
+
+        .pool-count {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 5px 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .pool-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pool-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--p1-color), var(--p2-color));
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+            transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* Arena Container */
+        .arena-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
+            margin: 0 auto;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: transparent;
+            z-index: 5;
+            cursor: crosshair;
+        }
+
+        /* Action Log Card */
+        .log-card {
+            padding: 20px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 190px;
+        }
+
+        .log-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            font-family: monospace;
+            color: var(--text-gray);
+            padding-right: 5px;
+        }
+
+        .log-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .log-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+            animation: slideInUp 0.2s ease-out;
+            word-wrap: break-word;
+        }
+
+        .log-system { color: var(--gold-color); }
+        .log-p1 { color: var(--p1-color); }
+        .log-p2 { color: var(--p2-color); }
+        .log-physics { color: #a5b4fc; }
+
+        /* Game Screen Control Bar */
+        .control-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn-icon {
+            padding: 12px;
+            font-size: 1rem;
+            flex: 1;
+        }
+
+        /* ==========================================================================
+           4. SCREEN 3: GAME OVER OVERLAY
+           ========================================================================== */
+        #game-over-screen {
+            flex-direction: column;
+            gap: 25px;
+            z-index: 100;
+            background: rgba(4, 5, 11, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .game-over-card {
+            padding: 50px 60px;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .game-over-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .loser-text {
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            margin-top: -10px;
+        }
+
+        .winner-announcement {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+            letter-spacing: 0.05em;
+        }
+
+        .game-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-val {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* ==========================================================================
+           5. OVERLAYS & MODALS: HOW TO PLAY
+           ========================================================================== */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 5, 11, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-card {
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #ffffff, var(--p1-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-gray);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .rules-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .rules-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .rules-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .rule-step {
+            display: flex;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 16px;
+            border-radius: 14px;
+            align-items: flex-start;
+        }
+
+        .rule-num {
+            background: linear-gradient(135deg, var(--p1-color), var(--p2-color));
+            color: var(--bg-darker);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .rule-text h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #ffffff;
+        }
+
+        .rule-text p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+
+        /* Lives HUD & Hane Styles */
+        .lives-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .heart-icon {
+            width: 24px;
+            height: 24px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-p1 .heart-icon {
+            color: var(--p1-color);
+            filter: drop-shadow(0 0 6px var(--p1-glow));
+        }
+        .card-p2 .heart-icon {
+            color: var(--p2-color);
+            filter: drop-shadow(0 0 6px var(--p2-glow));
+        }
+        .heart-icon.lost {
+            color: rgba(255, 255, 255, 0.08) !important;
+            filter: none !important;
+            transform: scale(0.8) rotate(-15deg);
+        }
+        .hane-container {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 6px;
+            margin-top: 5px;
+        }
+        .hane-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .hane-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes pulseGlow {
+            from { opacity: 0.4; filter: blur(10px); }
+            to { opacity: 0.7; filter: blur(15px); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Scaling for smaller heights / widths */
+        @media (max-height: 800px) {
+            .game-layout {
+                gap: 15px;
+                grid-template-columns: 240px 1fr 240px;
+            }
+            .arena-container {
+                max-width: 480px;
+            }
+            .log-card {
+                height: 120px;
+            }
+        }
+
+        /* Pulse animation for card clicks directing to the board */
+        @keyframes boardPulse {
+            0% {
+                box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4), 0 0 0px rgba(255, 255, 255, 0);
+                border-color: rgba(255, 255, 255, 0.03);
+            }
+            50% {
+                box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--active-color, var(--p1-color));
+                border-color: var(--active-color, var(--p1-color));
+            }
+            100% {
+                box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4), 0 0 0px rgba(255, 255, 255, 0);
+                border-color: rgba(255, 255, 255, 0.03);
+            }
+        }
+        .board-pulse-hint {
+            animation: boardPulse 0.8s ease-out;
+        }
+
+        /* Connection Status */
+        .conn-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+        .conn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444; /* red by default */
+            box-shadow: 0 0 8px #ef4444;
+        }
+        .conn-dot.online {
+            background: #10b981; /* green */
+            box-shadow: 0 0 8px #10b981;
+        }
+        
+        /* Lobby Panels */
+        .lobby-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .lobby-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+        
+        /* Premium Neon Inputs */
+        .lobby-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .lobby-input {
+            width: 100%;
+            font-family: var(--font-family);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: all 0.3s;
+            outline: none;
+            text-align: center;
+        }
+        .lobby-input:focus {
+            border-color: var(--p1-color);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+        
+        .lobby-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            margin: 5px 0;
+        }
+        .lobby-divider::before, .lobby-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .lobby-divider:not(:empty)::before {
+            margin-right: 15px;
+        }
+        .lobby-divider:not(:empty)::after {
+            margin-left: 15px;
+        }
+        
+        /* Spinners and loaders */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top-color: var(--p1-color);
+            border-bottom-color: var(--p2-color);
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3));
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Server config area */
+        .server-config-toggle {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .server-config-toggle:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient glowing nodes -->
+    <div id="glow-left" class="ambient-glow"></div>
+    <div id="glow-right" class="ambient-glow"></div>
+
+    <!-- Background live preview physics for Start Screen -->
+    <canvas id="menu-bg-canvas"></canvas>
+
+    <!-- ==========================================================================
+       SCREEN 1: START MENU
+       ========================================================================== -->
+    <div id="start-screen" class="screen-container">
+        <div class="glass-panel menu-card">
+            <div class="logo-container">
+                <div class="logo-text">MAGNEX</div>
+                <div class="logo-glow">MAGNEX</div>
+            </div>
+            <div class="subtitle">Tactical Magnetic Tabletop</div>
+            
+            <!-- Main Options -->
+            <div id="main-menu-buttons" class="lobby-panel">
+                <button class="btn btn-primary" id="btn-local-play">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    YEREL OYUN (PASLA-OYNA)
+                </button>
+                <button class="btn btn-secondary" id="btn-online-play" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(255, 25, 75, 0.08));">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    ÇEVRİMİÇİ MULTIPLAYER
+                </button>
+                <button class="btn btn-secondary" id="btn-how-to">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    NASIL OYNANIR
+                </button>
+            </div>
+
+            <!-- Online Lobby Menu -->
+            <div id="online-lobby-panel" class="lobby-panel hidden">
+                <div class="conn-badge" style="margin: 0 auto;">
+                    <span id="conn-dot" class="conn-dot"></span>
+                    <span id="conn-text">Sunucu Bağlantısı Yok</span>
+                </div>
+                
+                <!-- Server Config (Collapsible) -->
+                <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center;">
+                    <span id="btn-toggle-server" class="server-config-toggle">Sunucu Adresini Düzenle</span>
+                    <div id="server-config-container" class="hidden" style="width: 100%;">
+                        <input type="text" id="txt-server-url" class="lobby-input" value="" placeholder="http://localhost:3000" style="font-size: 0.8rem; padding: 8px 12px; margin-bottom: 8px;">
+                    </div>
+                </div>
+
+                <!-- Room Code Mode -->
+                <div class="lobby-input-wrapper">
+                    <input type="text" id="txt-room-code" class="lobby-input" placeholder="4 HANELİ KOD GİRİN" maxLength="4" style="text-align: center; text-transform: uppercase;">
+                </div>
+                <div class="lobby-row">
+                    <button class="btn btn-primary" id="btn-create-room" style="font-size: 0.95rem; padding: 12px 20px;">ODA KUR</button>
+                    <button class="btn btn-secondary" id="btn-join-room" style="font-size: 0.95rem; padding: 12px 20px;">ODAYA KATIL</button>
+                </div>
+
+                <div class="lobby-divider">VEYA</div>
+
+                <!-- Matchmaking Mode -->
+                <button class="btn btn-primary" id="btn-find-match" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(255, 25, 75, 0.2)); border-color: rgba(255, 255, 255, 0.25);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    RASTGELE EŞLEŞME BUL
+                </button>
+
+                <button class="btn btn-secondary" id="btn-back-to-main" style="margin-top: 10px;">
+                    ANA MENÜYE DÖN
+                </button>
+            </div>
+
+            <!-- Waiting/Searching Screen -->
+            <div id="waiting-panel" class="lobby-panel hidden">
+                <div class="spinner-container">
+                    <div class="spinner"></div>
+                    <div id="waiting-status" style="font-weight: 600; font-size: 1.1rem; letter-spacing: 0.05em; text-align: center;">Oyuncu Aranıyor...</div>
+                    <div id="waiting-details" style="color: var(--text-gray); font-size: 0.9rem; margin-top: -10px;">Geçen Süre: 00:00</div>
+                </div>
+                <button class="btn btn-secondary" id="btn-cancel-waiting">İPTAL ET</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       SCREEN 2: GAMEPLAY SCREEN
+       ========================================================================== -->
+    <div id="game-screen" class="screen-container hidden">
+        <div class="game-layout">
+            
+            <!-- Turn Indicator Header -->
+            <div class="glass-panel turn-banner turn-p1" id="turn-banner">
+                PLAYER 1'S TURN
+            </div>
+
+            <!-- Left Sidebar: Player 1 Status -->
+            <div class="sidebar">
+                <div class="glass-panel card-stats card-p1" style="cursor: pointer;" title="Click to view board hint">
+                    <div class="card-title">Player 1</div>
+                    <div class="lives-container" id="lives-p1"></div>
+                    <div class="hane-container">
+                        <span class="hane-label">Hane:</span>
+                        <span class="hane-val score-p1" id="score-p1">0</span>
+                    </div>
+                </div>
+
+                <div class="glass-panel pool-card" style="cursor: pointer;" title="Click to view board hint">
+                    <div class="card-title">Stones on Board</div>
+                    <div class="pool-count" id="pool-count">0</div>
+                    <div class="pool-bar-container">
+                        <div class="pool-bar-fill" id="pool-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Tabletop Canvas -->
+            <div class="arena-container">
+                <canvas id="game-canvas" width="600" height="600"></canvas>
+            </div>
+
+            <!-- Right Sidebar: Player 2 Status & Actions -->
+            <div class="sidebar">
+                <div class="glass-panel card-stats card-p2" style="cursor: pointer;" title="Click to view board hint">
+                    <div class="card-title">Player 2</div>
+                    <div class="lives-container" id="lives-p2"></div>
+                    <div class="hane-container">
+                        <span class="hane-label">Hane:</span>
+                        <span class="hane-val score-p2" id="score-p2">0</span>
+                    </div>
+                </div>
+
+                <!-- Scrolling Event Console -->
+                <div class="glass-panel log-card">
+                    <div class="card-title" style="text-align:left;">Action Log</div>
+                    <div class="log-box" id="log-box">
+                        <div class="log-entry log-system">[System] Game loaded. Player 1 starts placement.</div>
+                    </div>
+                </div>
+
+                <!-- Bottom Controls -->
+                <div class="control-row">
+                    <button class="btn btn-secondary btn-icon" id="btn-mute" title="Toggle Sound">
+                        <svg id="mute-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" id="btn-restart" title="Restart Game">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       SCREEN 3: GAME OVER OVERLAY
+       ========================================================================== -->
+    <div id="game-over-screen" class="screen-container hidden">
+        <div class="glass-panel game-over-card">
+            <div class="game-over-title" id="game-over-title">PLAYER X LOST!</div>
+            <div class="loser-text" id="loser-reason">Ran out of lives (0/5 Can remaining).</div>
+            
+            <div class="winner-announcement" id="winner-text">PLAYER Y WINS!</div>
+
+            <!-- Match Statistics -->
+            <div class="game-stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Total Turns</span>
+                    <span class="stat-val" id="stat-turns">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">P1 Snapped (Hane)</span>
+                    <span class="stat-val score-p1" id="stat-hane-p1">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">P2 Snapped (Hane)</span>
+                    <span class="stat-val score-p2" id="stat-hane-p2">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Largest Cluster</span>
+                    <span class="stat-val" id="stat-cluster">0</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-play-again" style="margin-top: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       OVERLAYS: HOW TO PLAY MODAL
+       ========================================================================== -->
+    <div id="rules-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-card">
+            <div class="modal-header">
+                <h2>How To Play MAGNEX</h2>
+                <button class="close-btn" id="btn-close-rules">&times;</button>
+            </div>
+            
+            <div class="rules-content">
+                <div class="rule-step">
+                    <div class="rule-num">1</div>
+                    <div class="rule-text">
+                        <h3>Turn-Based Placement</h3>
+                        <p>Players take turns placing a single magnet on any empty spot inside the circular tabletop arena. All placed stones are visually monochrome neon-white metallic spheres.</p>
+                    </div>
+                </div>
+
+                <div class="rule-step">
+                    <div class="rule-num">2</div>
+                    <div class="rule-text">
+                        <h3>Magnetic Pull (Physics)</h3>
+                        <p>All placed stones slide freely. When the distance between any two is within the attraction circle (150px threshold), they begin pulling each other together following the <strong>Inverse-Square Law</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="rule-step">
+                    <div class="rule-num">3</div>
+                    <div class="rule-text">
+                        <h3>Snap Penalty</h3>
+                        <p>When stones pull together and collide, they instantly snap! Triggering a snap removes all colliding stones from the board, adds them to your snapped count (Hane), and deducts 1 Life (Can).</p>
+                    </div>
+                </div>
+
+                <div class="rule-step">
+                    <div class="rule-num">4</div>
+                    <div class="rule-text">
+                        <h3>Lives & Win Conditions</h3>
+                        <p>Each player starts with 5 Lives (Can) and an unlimited pool of stones. The first player whose lives drop to 0 loses instantly, crowning the other player as the victor!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==========================================================================
+       6. CORE GAMEPLAY ENGINE & DYNAMICS (VANILLA JS)
+       ========================================================================== -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        // Global Error Handler to log errors directly into Action Log
+        window.addEventListener('error', (e) => {
+            console.error("Global Error Caught:", e);
+            if (window.game && typeof window.game.addLog === 'function') {
+                window.game.addLog(`[Error] ${e.message} at ${e.filename ? e.filename.split('/').pop() : 'script'}:${e.lineno}`, 'log-system');
+            }
+        });
+
+        // Color Constants for Canvas compatibility (since Canvas cannot parse CSS variables directly)
+        const P1_COLOR = 'hsl(190, 100%, 50%)';   // Neon Cyan
+        const P2_COLOR = 'hsl(350, 100%, 55%)';   // Neon Rose
+        const GOLD_COLOR = 'hsl(45, 100%, 55%)';  // Neon Gold
+        const STONE_COLOR = '#ffffff';            // Neon White Chrome Sphere
+        const STONE_GLOW = 'rgba(255, 255, 255, 0.4)';
+
+        /* ==========================================================================
+           A. AUDIO SYNTHESIZER (WEB AUDIO API)
+           ========================================================================== */
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                try {
+                    if (!this.ctx) {
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        if (AudioContextClass) {
+                            this.ctx = new AudioContextClass();
+                        }
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume().catch(err => console.warn("AudioContext resume failed:", err));
+                    }
+                } catch (e) {
+                    console.warn("AudioContext initialization failed:", e);
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                return this.muted;
+            }
+
+            playClack() {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.04);
+                    
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.05);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.06);
+                } catch (e) {
+                    console.warn("playClack failed:", e);
+                }
+            }
+
+            playSnap(clusterSize = 2) {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+
+                    const now = this.ctx.currentTime;
+                    const sizeFactor = Math.min(clusterSize / 5, 2.5); // Richer sound for bigger groups
+
+                    // Primary metallic snap
+                    const osc1 = this.ctx.createOscillator();
+                    const osc2 = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc1.type = 'triangle';
+                    osc1.frequency.setValueAtTime(450 * (1 + sizeFactor * 0.1), now);
+                    osc1.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+
+                    osc2.type = 'square';
+                    osc2.frequency.setValueAtTime(220 * (1 - sizeFactor * 0.05), now);
+                    osc2.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(800, now);
+                    filter.Q.setValueAtTime(3.0, now);
+
+                    gain.gain.setValueAtTime(0.4 + sizeFactor * 0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+                    osc1.connect(filter);
+                    osc2.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc1.start();
+                    osc2.start();
+                    osc1.stop(now + 0.2);
+                    osc2.stop(now + 0.2);
+                } catch (e) {
+                    console.warn("playSnap failed:", e);
+                }
+            }
+
+            playBounce() {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.12);
+
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.14);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                } catch (e) {
+                    console.warn("playBounce failed:", e);
+                }
+            }
+
+            playWin() {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+
+                    const now = this.ctx.currentTime;
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // Beautiful C Major Ascending
+                    
+                    notes.forEach((freq, idx) => {
+                        try {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                            
+                            gain.gain.setValueAtTime(0, now);
+                            gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.1 + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.1 + 0.35);
+
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+
+                            osc.start(now + idx * 0.1);
+                            osc.stop(now + idx * 0.1 + 0.4);
+                        } catch (err) {
+                            console.warn("playWin note note synth failed:", err);
+                        }
+                    });
+                } catch (e) {
+                    console.warn("playWin failed:", e);
+                }
+            }
+
+            playLose() {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+
+                    const now = this.ctx.currentTime;
+                    const notes = [311.13, 293.66, 277.18, 220.00]; // Descending sad minor tones
+                    
+                    notes.forEach((freq, idx) => {
+                        try {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                            osc.frequency.linearRampToValueAtTime(freq - 20, now + idx * 0.15 + 0.25);
+                            
+                            gain.gain.setValueAtTime(0, now);
+                            gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.15 + 0.03);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.15 + 0.4);
+
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+
+                            osc.start(now + idx * 0.15);
+                            osc.stop(now + idx * 0.15 + 0.45);
+                        } catch (err) {
+                            console.warn("playLose note note synth failed:", err);
+                        }
+                    });
+                } catch (e) {
+                    console.warn("playLose failed:", e);
+                }
+            }
+        }
+
+        const sound = new SoundSynth();
+
+        /* ==========================================================================
+           B. GLOWING NEON PARTICLE SYSTEM
+           ========================================================================== */
+        class Spark {
+            constructor(x, y, vx, vy, size, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.size = size;
+                this.color = color;
+                this.alpha = 1.0;
+                this.decay = 0.02 + Math.random() * 0.03;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.95; // Drags down velocity
+                this.vy *= 0.95;
+                this.alpha -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Shockwave {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 5;
+                this.maxRadius = 40 + Math.random() * 20;
+                this.alpha = 1.0;
+                this.speed = 2.0;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.speed *= 0.92;
+                this.alpha = 1 - (this.radius / this.maxRadius);
+            }
+
+            draw(ctx) {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class ParticleEngine {
+            constructor() {
+                this.sparks = [];
+                this.shockwaves = [];
+            }
+
+            spawnSparks(x, y, color, count = 12) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1.5 + Math.random() * 4.5;
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed;
+                    const size = 1.5 + Math.random() * 2.5;
+                    this.sparks.push(new Spark(x, y, vx, vy, size, color));
+                }
+            }
+
+            spawnShockwave(x, y, color) {
+                this.shockwaves.push(new Shockwave(x, y, color));
+            }
+
+            update() {
+                for (let i = this.sparks.length - 1; i >= 0; i--) {
+                    this.sparks[i].update();
+                    if (this.sparks[i].alpha <= 0) this.sparks.splice(i, 1);
+                }
+                for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+                    this.shockwaves[i].update();
+                    if (this.shockwaves[i].alpha <= 0) this.shockwaves.splice(i, 1);
+                }
+            }
+
+            draw(ctx) {
+                // Additive blend mode for epic glowing overlapping particle effects
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                this.shockwaves.forEach(sw => sw.draw(ctx));
+                this.sparks.forEach(s => s.draw(ctx));
+                ctx.restore();
+            }
+
+            clear() {
+                this.sparks = [];
+                this.shockwaves = [];
+            }
+        }
+
+        /* ==========================================================================
+           C. PHYSICS ENGINE & SYSTEM DATA STRUCTURES
+           ========================================================================== */
+        class Magnet {
+            constructor(rx, ry, owner, color) {
+                this.rx = rx; // Offset X from cluster center
+                this.ry = ry; // Offset Y from cluster center
+                this.owner = owner; // 1 or 2
+                this.color = color; // String representing hex or hsl
+            }
+        }
+
+        class Cluster {
+            constructor(id, cx, cy, vx = 0, vy = 0) {
+                this.id = id;
+                this.cx = cx; // Cluster Center X
+                this.cy = cy; // Cluster Center Y
+                this.vx = vx; // Velocity X
+                this.vy = vy; // Velocity Y
+                this.magnets = []; // Array of Magnet objects
+            }
+
+            get mass() {
+                return this.magnets.length;
+            }
+
+            // Calculates center of mass and moves offsets relative to it
+            recenter() {
+                if (this.magnets.length === 0) return;
+                
+                let sumRx = 0, sumRy = 0;
+                this.magnets.forEach(m => {
+                    sumRx += m.rx;
+                    sumRy += m.ry;
+                });
+                
+                const avgRx = sumRx / this.magnets.length;
+                const avgRy = sumRy / this.magnets.length;
+
+                // Adjust cluster center to match Center of Mass
+                this.cx += avgRx;
+                this.cy += avgRy;
+
+                // Subtract relative offsets to keep magnets at their exact absolute positions
+                this.magnets.forEach(m => {
+                    m.rx -= avgRx;
+                    m.ry -= avgRy;
+                });
+            }
+        }
+
+        class PhysicsEngine {
+            constructor(canvas, particleEngine) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = particleEngine;
+                
+                // Arena Constants
+                this.arenaRadius = 265; // Dynamic boundary limit inside a 300 radius felt
+                this.arenaCenter = { x: 300, y: 300 };
+
+                // Physics Constants
+                this.MAGNET_RADIUS = 13.5;
+                this.ATTRACTION_THRESHOLD = 150; // Max attraction range
+                this.G_CONSTANT = 3800; // Gravity/Magnetic pull coefficient
+                this.FRICTION = 0.04; // Sliding drag on table felt
+                this.RESTITUTION = 0.6; // Boundary elastic collision reflection
+
+                this.clusters = [];
+                this.clusterIdCounter = 0;
+            }
+
+            addSingleMagnetCluster(x, y, owner, color) {
+                const id = this.clusterIdCounter++;
+                const cluster = new Cluster(id, x, y, 0, 0);
+                cluster.magnets.push(new Magnet(0, 0, owner, color));
+                this.clusters.push(cluster);
+                return cluster;
+            }
+
+            // Resolves interactive vector forces, elastic boundaries, momentum, and snapping merges
+            update() {
+                let moving = false;
+
+                // 1. Calculate and Accumulate Magnetic Forces between DIFFERENT clusters (Inverse-Square Law)
+                // Initialize net forces
+                const forces = {};
+                this.clusters.forEach(c => {
+                    forces[c.id] = { fx: 0, fy: 0 };
+                });
+
+                for (let i = 0; i < this.clusters.length; i++) {
+                    const cA = this.clusters[i];
+                    for (let j = i + 1; j < this.clusters.length; j++) {
+                        const cB = this.clusters[j];
+
+                        // Sum pull forces between every magnet in cluster A and every magnet in cluster B
+                        cA.magnets.forEach(magA => {
+                            const absAx = cA.cx + magA.rx;
+                            const absAy = cA.cy + magA.ry;
+
+                            cB.magnets.forEach(magB => {
+                                const absBx = cB.cx + magB.rx;
+                                const absBy = cB.cy + magB.ry;
+
+                                const dx = absBx - absAx;
+                                const dy = absBy - absAy;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                                if (dist > 0 && dist < this.ATTRACTION_THRESHOLD) {
+                                    // Inverse Square Law: F = G / d^2. Add small epsilon (50) to prevent infinite force
+                                    const forceMag = this.G_CONSTANT / (dist * dist + 50);
+
+                                    // Vectorize force components
+                                    const fx = (dx / dist) * forceMag;
+                                    const fy = (dy / dist) * forceMag;
+
+                                    // Adheres strictly to Newton's Third Law (Equal & Opposite Action-Reaction)
+                                    forces[cA.id].fx += fx;
+                                    forces[cA.id].fy += fy;
+                                    forces[cB.id].fx -= fx;
+                                    forces[cB.id].fy -= fy;
+                                }
+                            });
+                        });
+                    }
+                }
+
+                // 2. Apply Acceleration & Update Velocities/Positions
+                this.clusters.forEach(c => {
+                    const netF = forces[c.id];
+                    // Acceleration: a = F / mass
+                    const ax = netF.fx / c.mass;
+                    const ay = netF.fy / c.mass;
+
+                    c.vx += ax;
+                    c.vy += ay;
+
+                    // Apply tabletop slide friction drag
+                    c.vx *= (1 - this.FRICTION);
+                    c.vy *= (1 - this.FRICTION);
+
+                    // Threshold cutoff to avoid infinite micro-movements or NaN lockups
+                    if (isNaN(c.vx) || Math.abs(c.vx) < 0.03) c.vx = 0;
+                    if (isNaN(c.vy) || Math.abs(c.vy) < 0.03) c.vy = 0;
+                    if (isNaN(c.cx)) c.cx = this.arenaCenter.x;
+                    if (isNaN(c.cy)) c.cy = this.arenaCenter.y;
+
+                    if (c.vx !== 0 || c.vy !== 0) {
+                        c.cx += c.vx;
+                        c.cy += c.vy;
+                        moving = true;
+                    }
+                });
+
+                // 3. Resolve Magnet-to-Magnet Collisions and merge clusters
+                this.resolveCollisions();
+
+                // 4. Resolve Arena Circular Boundaries
+                this.resolveBoundaries();
+
+                return moving;
+            }
+
+            // Checks and resolves overlap and inelastic cluster merges
+            // Checks and resolves overlap and inelastic cluster merges
+            resolveCollisions() {
+                let mergedAny = false;
+
+                for (let i = 0; i < this.clusters.length; i++) {
+                    const cA = this.clusters[i];
+                    for (let j = i + 1; j < this.clusters.length; j++) {
+                        const cB = this.clusters[j];
+
+                        // Find if any magnets from cA overlap with magnets from cB
+                        let overlapFound = false;
+                        let magAIntersect = null;
+                        let magBIntersect = null;
+                        let minDistance = Infinity;
+
+                        cA.magnets.forEach(magA => {
+                            const absAx = cA.cx + magA.rx;
+                            const absAy = cA.cy + magA.ry;
+
+                            cB.magnets.forEach(magB => {
+                                const absBx = cB.cx + magB.rx;
+                                const absBy = cB.cy + magB.ry;
+
+                                const dx = absBx - absAx;
+                                const dy = absBy - absAy;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                                // Collision boundary: distance <= sum of radiuses (2 * MAGNET_RADIUS)
+                                if (dist <= this.MAGNET_RADIUS * 2) {
+                                    overlapFound = true;
+                                    if (dist < minDistance) {
+                                        minDistance = dist;
+                                        magAIntersect = magA;
+                                        magBIntersect = magB;
+                                    }
+                                }
+                            });
+                        });
+
+                        if (overlapFound) {
+                            // COLLISION HIT! Perform collection and snap feedback
+                            this.mergeClusters(cA, cB, magAIntersect, magBIntersect, minDistance);
+                            mergedAny = true;
+                            break; // Stop loop, update array, recalculate next frames
+                        }
+                    }
+                    if (mergedAny) break;
+                }
+
+                if (mergedAny) {
+                    this.resolveCollisions(); // Recursive pass to handle cascade snappings
+                }
+            }
+
+            // Integrates colliding clusters, awards them to the active player, and removes them from the board
+            mergeClusters(cA, cB, magA, magB, curDist) {
+                // Current active player is determined by the game controller state
+                const activePlayer = game.activePlayer;
+                const activeColor = activePlayer === 1 ? P1_COLOR : P2_COLOR;
+
+                const absAx = cA.cx + magA.rx;
+                const absAy = cA.cy + magA.ry;
+                const absBx = cB.cx + magB.rx;
+                const absBy = cB.cy + magB.ry;
+
+                // Midpoint for collision sparks and shockwave placement
+                let dx = absBx - absAx;
+                let dy = absBy - absAy;
+                if (curDist === 0) { // Safety division fallback
+                    dx = 1; dy = 0; curDist = 1;
+                }
+                const nx = dx / curDist;
+                const ny = dy / curDist;
+
+                const contactX = absAx + nx * this.MAGNET_RADIUS;
+                const contactY = absAy + ny * this.MAGNET_RADIUS;
+
+                // Total size of colliding magnets to be collected
+                const snappedCount = cA.mass + cB.mass;
+
+                // 1. VFX & SFX Feedback
+                this.particles.spawnSparks(contactX, contactY, activeColor, 12 + snappedCount * 4);
+                this.particles.spawnShockwave(contactX, contactY, activeColor);
+                
+                // Metallic snapped sound
+                sound.playSnap(snappedCount);
+
+                // 2. Remove BOTH clusters from the tabletop arena entirely
+                this.clusters = this.clusters.filter(c => c.id !== cA.id && c.id !== cB.id);
+
+                // 3. Subtract a life from the active player and award snapped magnets to hane
+                if (activePlayer === 1) {
+                    game.p1Lives = Math.max(0, game.p1Lives - 1);
+                    game.p1Hane += snappedCount;
+                } else {
+                    game.p2Lives = Math.max(0, game.p2Lives - 1);
+                    game.p2Hane += snappedCount;
+                }
+
+                // 4. Add action log entry
+                game.addLog(`[Physics] Snap! Player ${activePlayer} triggered a collision! -1 Life (Can), collected +${snappedCount} stones to Hane.`, `log-physics`);
+            }
+
+            // Standard elastic bouncing boundaries with circular table borders
+            resolveBoundaries() {
+                this.clusters.forEach(c => {
+                    c.magnets.forEach(mag => {
+                        const absX = c.cx + mag.rx;
+                        const absY = c.cy + mag.ry;
+
+                        const dx = absX - this.arenaCenter.x;
+                        const dy = absY - this.arenaCenter.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        // If magnet boundary crosses table threshold edge
+                        if (dist + this.MAGNET_RADIUS > this.arenaRadius) {
+                            const nx = dist > 0 ? dx / dist : 1; // Edge contact normal
+                            const ny = dist > 0 ? dy / dist : 0;
+
+                            // Overlap depth
+                            const overlap = (dist + this.MAGNET_RADIUS) - this.arenaRadius;
+
+                            // Push cluster center back inside
+                            c.cx -= nx * overlap;
+                            c.cy -= ny * overlap;
+
+                            // Bouncing elastic velocity reflection along normal
+                            const dot = c.vx * nx + c.vy * ny;
+                            if (dot > 0) { // Moving outwards
+                                c.vx = c.vx - (1 + this.RESTITUTION) * dot * nx;
+                                c.vy = c.vy - (1 + this.RESTITUTION) * dot * ny;
+
+                                // Spawn light spark particles and shockwaves on border
+                                const absHitX = absX - nx * this.MAGNET_RADIUS;
+                                const absHitY = absY - ny * this.MAGNET_RADIUS;
+                                const activeColor = mag.owner === 1 ? P1_COLOR : P2_COLOR;
+
+                                this.particles.spawnSparks(absHitX, absHitY, activeColor, 4);
+                                this.particles.spawnShockwave(absHitX, absHitY, activeColor);
+                                
+                                sound.playBounce();
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Checks whether a magnet can be safely placed at mouse location
+            validatePlacement(x, y) {
+                // 1. Must be inside circular table bounds
+                const dx = x - this.arenaCenter.x;
+                const dy = y - this.arenaCenter.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist + this.MAGNET_RADIUS > this.arenaRadius) {
+                    return false;
+                }
+
+                // 2. Must not overlap/intersect with any existing magnets (distance must be > 2R)
+                for (let c of this.clusters) {
+                    for (let mag of c.magnets) {
+                        const absX = c.cx + mag.rx;
+                        const absY = c.cy + mag.ry;
+
+                        const mx = x - absX;
+                        const my = y - absY;
+                        const d = Math.sqrt(mx * mx + my * my);
+
+                        if (d < this.MAGNET_RADIUS * 2 + 1) { // 1px spacing safety
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            // Render all components onto the Arena Canvas
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // A. Draw Felt Circular Table Base
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, 290, 0, Math.PI * 2);
+                
+                // Felt tabletop gradient
+                const feltGrad = this.ctx.createRadialGradient(
+                    this.arenaCenter.x, this.arenaCenter.y, 50, 
+                    this.arenaCenter.x, this.arenaCenter.y, 300
+                );
+                feltGrad.addColorStop(0, '#0c0f20');
+                feltGrad.addColorStop(0.7, '#070914');
+                feltGrad.addColorStop(1, '#020306');
+                this.ctx.fillStyle = feltGrad;
+                this.ctx.fill();
+                
+                // Elegant glowing board edge border
+                this.ctx.strokeStyle = game.simulating 
+                    ? 'rgba(255, 190, 50, 0.25)' 
+                    : (game.activePlayer === 1 ? 'rgba(0, 240, 255, 0.25)' : 'rgba(255, 25, 75, 0.25)');
+                this.ctx.lineWidth = 4;
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowColor = this.ctx.strokeStyle;
+                this.ctx.stroke();
+                this.ctx.restore();
+
+                // Draw Table Grid details (tactical polar grid)
+                this.ctx.save();
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+                this.ctx.lineWidth = 1;
+                for (let r = 50; r < 265; r += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, r, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+                
+                // Inner lines
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.arenaCenter.x - 280, this.arenaCenter.y);
+                this.ctx.lineTo(this.arenaCenter.x + 280, this.arenaCenter.y);
+                this.ctx.moveTo(this.arenaCenter.x, this.arenaCenter.y - 280);
+                this.ctx.lineTo(this.arenaCenter.x, this.arenaCenter.y + 280);
+                this.ctx.stroke();
+                this.ctx.restore();
+
+                // B. Draw Clusters & Magnets
+                this.clusters.forEach(c => {
+                    // Draw outer subtle group glowing cluster aura
+                    this.ctx.save();
+                    this.ctx.beginPath();
+                    c.magnets.forEach(mag => {
+                        const absX = c.cx + mag.rx;
+                        const absY = c.cy + mag.ry;
+                        this.ctx.arc(absX, absY, this.MAGNET_RADIUS + 4, 0, Math.PI * 2);
+                    });
+                    this.ctx.globalAlpha = 0.15;
+                    const glowColor = STONE_COLOR;
+                    this.ctx.fillStyle = glowColor;
+                    this.ctx.shadowBlur = 20;
+                    this.ctx.shadowColor = glowColor;
+                    this.ctx.fill();
+                    this.ctx.restore();
+
+                    // Draw individual magnets in the cluster
+                    c.magnets.forEach(mag => {
+                        const absX = c.cx + mag.rx;
+                        const absY = c.cy + mag.ry;
+                        this.draw3DMagnet(absX, absY, mag.owner);
+                    });
+                });
+
+                // C. Render Sparks and Shockwaves Overlay
+                this.particles.draw(this.ctx);
+            }
+
+            // Draws a beautiful premium 3D metallic sphere matching player aesthetics
+            // Draws a beautiful premium 3D metallic sphere matching player aesthetics
+            draw3DMagnet(x, y, owner, opacity = 1.0) {
+                const colorTheme = STONE_COLOR;
+                const neonColor = STONE_GLOW;
+                
+                this.ctx.save();
+                this.ctx.globalAlpha = opacity;
+
+                // 1. Neon Aura Glow
+                this.ctx.shadowBlur = 12;
+                this.ctx.shadowColor = colorTheme;
+                
+                // 2. Base Dark/Chrome metallic shell
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.MAGNET_RADIUS, 0, Math.PI * 2);
+                this.ctx.fillStyle = '#1c1e2d';
+                this.ctx.fill();
+                
+                // Reset shadow to draw clean specular gradients
+                this.ctx.shadowBlur = 0;
+
+                // 3. Polar Halves / Core center colored glowing neon ring (monochrome white-silver chrome)
+                const ringGrad = this.ctx.createRadialGradient(x, y, 0, x, y, this.MAGNET_RADIUS);
+                ringGrad.addColorStop(0, '#ffffff');
+                ringGrad.addColorStop(0.3, '#f3f4f6');
+                ringGrad.addColorStop(0.5, '#4b5563');
+                ringGrad.addColorStop(0.8, '#1f2937');
+                ringGrad.addColorStop(1, '#111827');
+                
+                this.ctx.fillStyle = ringGrad;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.MAGNET_RADIUS - 1, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // 4. Chrome spherical specular highlights
+                const specGrad = this.ctx.createRadialGradient(
+                    x - this.MAGNET_RADIUS * 0.35, y - this.MAGNET_RADIUS * 0.35, 1,
+                    x, y, this.MAGNET_RADIUS
+                );
+                specGrad.addColorStop(0, 'rgba(255, 25, 75, 0.85)');
+                specGrad.addColorStop(0.2, 'rgba(255, 255, 255, 0.3)');
+                specGrad.addColorStop(0.7, 'transparent');
+                specGrad.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+
+                this.ctx.fillStyle = specGrad;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.MAGNET_RADIUS, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // 5. Delicate Inner Magnetic Poles Indicators (+ / -) - High contrast dark pole
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                this.ctx.font = 'bold 11px monospace';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                const poleChar = owner === 1 ? '+' : '-';
+                this.ctx.fillText(poleChar, x, y + 0.5);
+
+                this.ctx.restore();
+            }
+
+            // Resets all elements
+            clear() {
+                this.clusters = [];
+                this.clusterIdCounter = 0;
+            }
+        }
+
+        /* ==========================================================================
+           D. COMPREHENSIVE GAME PROCESSOR (STATE & CONTROLLER)
+           ========================================================================== */
+        class GameController {
+            constructor() {
+                // UI Screens DOM links
+                this.scrStart = document.getElementById('start-screen');
+                this.scrGame = document.getElementById('game-screen');
+                this.scrGameOver = document.getElementById('game-over-screen');
+                this.modalRules = document.getElementById('rules-modal');
+
+                // Game Elements DOM links
+                this.canvas = document.getElementById('game-canvas');
+                this.lblTurn = document.getElementById('turn-banner');
+                this.lblScoreP1 = document.getElementById('score-p1');
+                this.lblScoreP2 = document.getElementById('score-p2');
+                this.lblPool = document.getElementById('pool-count');
+                this.barPool = document.getElementById('pool-bar-fill');
+                this.logBox = document.getElementById('log-box');
+                this.btnMute = document.getElementById('btn-mute');
+                this.muteIcon = document.getElementById('mute-icon');
+
+                // Setup Physics and Sparks
+                this.particles = new ParticleEngine();
+                this.physics = new PhysicsEngine(this.canvas, this.particles);
+
+                // Game variables
+                this.activePlayer = 1; // 1 = Blue (P1), 2 = Red (P2)
+                this.simulating = false; // Is active movement executing?
+                this.p1Lives = 5;
+                this.p2Lives = 5;
+                this.p1Hane = 0;
+                this.p2Hane = 0;
+                this.turnCounter = 0;
+                this.interactionEnabled = false;
+
+                // Mouse Position Tracking for visual Ghost Hover and Spring Vector Field overlays
+                this.mousePos = { x: 0, y: 0 };
+                this.mouseOnCanvas = false;
+
+                // Online Multiplayer State
+                this.isOnline = false;
+                this.myRole = 'local'; // 'p1', 'p2', or 'local'
+                this.roomCode = null;
+                this.socket = null;
+                this.matchmakingTimer = null;
+                this.matchmakingSeconds = 0;
+                
+                // Get saved server address or default to window.location.origin
+                const defaultServer = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3000';
+                this.serverUrl = localStorage.getItem('magnex_server_url') || defaultServer;
+
+                this.initEvents();
+            }
+
+            initEvents() {
+                // Yerel Oyun Başlat
+                document.getElementById('btn-local-play').addEventListener('click', () => {
+                    sound.init(); // comply with browser media interaction policies
+                    this.isOnline = false;
+                    this.myRole = 'local';
+                    this.startGame();
+                });
+                
+                // Çevrimiçi Lobiye Git
+                document.getElementById('btn-online-play').addEventListener('click', () => {
+                    sound.init(); // comply with browser media interaction policies
+                    document.getElementById('main-menu-buttons').classList.add('hidden');
+                    document.getElementById('online-lobby-panel').classList.remove('hidden');
+                    this.connectSocket();
+                });
+                
+                document.getElementById('btn-how-to').addEventListener('click', () => {
+                    this.modalRules.classList.remove('hidden');
+                });
+                
+                document.getElementById('btn-close-rules').addEventListener('click', () => {
+                    this.modalRules.classList.add('hidden');
+                });
+
+                // Lobi Paneli - Sunucu Adres Düzenleme
+                document.getElementById('btn-toggle-server').addEventListener('click', () => {
+                    const container = document.getElementById('server-config-container');
+                    container.classList.toggle('hidden');
+                });
+
+                const txtServerUrl = document.getElementById('txt-server-url');
+                txtServerUrl.value = this.serverUrl;
+                txtServerUrl.addEventListener('change', () => {
+                    let val = txtServerUrl.value.trim();
+                    if (val) {
+                        if (!val.startsWith('http://') && !val.startsWith('https://')) {
+                            val = 'http://' + val;
+                        }
+                        this.serverUrl = val;
+                        localStorage.setItem('magnex_server_url', val);
+                        this.connectSocket(); // Reconnect using new url
+                    }
+                });
+
+                // Lobi Paneli - Oda Kur / Katıl
+                document.getElementById('btn-create-room').addEventListener('click', () => {
+                    if (!this.socket || !this.socket.connected) {
+                        alert("Sunucuya bağlı değilsiniz! Lütfen bağlantıyı kontrol edin.");
+                        return;
+                    }
+                    const code = Math.floor(1000 + Math.random() * 9000).toString();
+                    this.socket.emit('create_room', code);
+                });
+
+                document.getElementById('btn-join-room').addEventListener('click', () => {
+                    if (!this.socket || !this.socket.connected) {
+                        alert("Sunucuya bağlı değilsiniz! Lütfen bağlantıyı kontrol edin.");
+                        return;
+                    }
+                    const codeInput = document.getElementById('txt-room-code');
+                    const code = codeInput.value.trim().toUpperCase();
+                    if (code.length !== 4) {
+                        alert("Lütfen 4 haneli bir oda kodu girin!");
+                        return;
+                    }
+                    this.socket.emit('join_room', code);
+                });
+
+                // Lobi Paneli - Eşleşme Bul
+                document.getElementById('btn-find-match').addEventListener('click', () => {
+                    if (!this.socket || !this.socket.connected) {
+                        alert("Sunucuya bağlı değilsiniz! Lütfen bağlantıyı kontrol edin.");
+                        return;
+                    }
+                    this.socket.emit('join_matchmaking');
+                });
+
+                // Lobi Paneli - Arama İptal
+                document.getElementById('btn-cancel-waiting').addEventListener('click', () => {
+                    this.hideWaitingPanel();
+                    if (this.socket) {
+                        this.socket.emit('leave_matchmaking');
+                    }
+                });
+
+                // Lobi Paneli - Geri Git
+                document.getElementById('btn-back-to-main').addEventListener('click', () => {
+                    document.getElementById('online-lobby-panel').classList.add('hidden');
+                    document.getElementById('main-menu-buttons').classList.remove('hidden');
+                    if (this.socket) {
+                        this.socket.disconnect();
+                        this.socket = null;
+                    }
+                });
+
+                // Bağlantı Koptu Paneli - Geri Git
+                document.getElementById('btn-disconnect-quit').addEventListener('click', () => {
+                    document.getElementById('disconnect-modal').classList.add('hidden');
+                    this.scrGame.classList.add('hidden');
+                    this.scrStart.classList.remove('hidden');
+                    document.getElementById('online-lobby-panel').classList.add('hidden');
+                    document.getElementById('main-menu-buttons').classList.remove('hidden');
+                    if (this.socket) {
+                        this.socket.disconnect();
+                        this.socket = null;
+                    }
+                });
+
+                // Yeniden Başlatma Teklifi - Kabul/Red
+                document.getElementById('btn-restart-accept').addEventListener('click', () => {
+                    if (this.isOnline && this.socket) {
+                        this.socket.emit('restart_confirm', { roomCode: this.roomCode });
+                    }
+                    document.getElementById('restart-confirm-modal').classList.add('hidden');
+                });
+
+                document.getElementById('btn-restart-decline').addEventListener('click', () => {
+                    document.getElementById('restart-confirm-modal').classList.add('hidden');
+                    if (this.isOnline && this.socket) {
+                        this.addLog(`[System] Yeniden başlatma isteğini reddettiniz.`, 'log-system');
+                    }
+                });
+
+                // Oyun İçi Restart
+                document.getElementById('btn-restart').addEventListener('click', () => {
+                    if (this.isOnline) {
+                        this.addLog(`[System] Yeniden başlatma isteği rakibe gönderildi. Yanıt bekleniyor...`, 'log-system');
+                        this.socket.emit('restart_request', { roomCode: this.roomCode });
+                    } else {
+                        this.restartGame();
+                    }
+                });
+
+                this.btnMute.addEventListener('click', () => {
+                    const isMuted = sound.toggleMute();
+                    this.updateMuteUI(isMuted);
+                });
+
+                document.getElementById('btn-play-again').addEventListener('click', () => {
+                    if (this.isOnline) {
+                        this.addLog(`[System] Yeniden başlatma isteği rakibe gönderildi. Yanıt bekleniyor...`, 'log-system');
+                        this.socket.emit('restart_request', { roomCode: this.roomCode });
+                    } else {
+                        this.restartGame();
+                    }
+                });
+
+                // Board clicks & hover previews
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    // Robust scaling mapping client space to canvas drawing pixels
+                    this.mousePos.x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+                    this.mousePos.y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+                    this.mouseOnCanvas = true;
+                });
+
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.mouseOnCanvas = false;
+                });
+
+                this.canvas.addEventListener('mouseenter', () => {
+                    if (this.interactionEnabled && !this.simulating) {
+                        this.mouseOnCanvas = true;
+                    }
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    if (!this.interactionEnabled || this.simulating) return;
+                    
+                    // Online ise sırayı kontrol et
+                    if (this.isOnline) {
+                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        if (!isMyTurn) return;
+                    }
+
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+                    const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+                    if (this.physics.validatePlacement(x, y)) {
+                        if (this.isOnline) {
+                            this.socket.emit('place_magnet', {
+                                roomCode: this.roomCode,
+                                x: x,
+                                y: y
+                            });
+                        }
+                        this.placeMagnet(x, y);
+                    } else {
+                        // Play a light fail warning flash
+                        sound.playBounce();
+                        this.addLog(`[System] Invalid placement! Cannot overlap or place outside bounds.`, `log-system`);
+                    }
+                });
+
+                // Unified Touch Events support for mobile/tablets
+                const handleTouchStartOrMove = (e) => {
+                    if (!this.interactionEnabled || this.simulating) return;
+                    
+                    // Online ise sırayı kontrol et
+                    if (this.isOnline) {
+                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        if (!isMyTurn) return;
+                    }
+
+                    e.preventDefault(); // Prevent scrolling/zoom
+                    if (e.touches.length > 0) {
+                        const rect = this.canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        this.mousePos.x = (touch.clientX - rect.left) * (this.canvas.width / rect.width);
+                        this.mousePos.y = (touch.clientY - rect.top) * (this.canvas.height / rect.height);
+                        this.mouseOnCanvas = true;
+                    }
+                };
+
+                this.canvas.addEventListener('touchstart', handleTouchStartOrMove, { passive: false });
+                this.canvas.addEventListener('touchmove', handleTouchStartOrMove, { passive: false });
+
+                this.canvas.addEventListener('touchend', (e) => {
+                    if (!this.interactionEnabled || this.simulating) return;
+                    
+                    // Online ise sırayı kontrol et
+                    if (this.isOnline) {
+                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        if (!isMyTurn) return;
+                    }
+
+                    e.preventDefault();
+                    this.mouseOnCanvas = false;
+
+                    const x = this.mousePos.x;
+                    const y = this.mousePos.y;
+
+                    if (this.physics.validatePlacement(x, y)) {
+                        if (this.isOnline) {
+                            this.socket.emit('place_magnet', {
+                                roomCode: this.roomCode,
+                                x: x,
+                                y: y
+                            });
+                        }
+                        this.placeMagnet(x, y);
+                    } else {
+                        sound.playBounce();
+                        this.addLog(`[System] Invalid placement! Cannot overlap or place outside bounds.`, `log-system`);
+                    }
+                }, { passive: false });
+
+                // Card click board glowing neon hints
+                const arena = document.querySelector('.arena-container');
+                const triggerBoardHint = () => {
+                    const activeColor = this.activePlayer === 1 ? P1_COLOR : P2_COLOR;
+                    arena.style.setProperty('--active-color', activeColor);
+                    arena.classList.remove('board-pulse-hint');
+                    void arena.offsetWidth; // Trigger reflow
+                    arena.classList.add('board-pulse-hint');
+                    setTimeout(() => {
+                        arena.classList.remove('board-pulse-hint');
+                    }, 800);
+                };
+
+                document.querySelectorAll('.card-p1, .card-p2, .pool-card').forEach(card => {
+                    card.addEventListener('click', triggerBoardHint);
+                });
+            }
+
+            connectSocket() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                }
+
+                const connDot = document.getElementById('conn-dot');
+                const connText = document.getElementById('conn-text');
+                
+                connDot.className = 'conn-dot';
+                connDot.style.background = '#f59e0b'; // Amber
+                connDot.style.boxShadow = '0 0 8px #f59e0b';
+                connText.innerText = 'Bağlanılıyor...';
+
+                try {
+                    // Force path if served via express, or use complete URL
+                    this.socket = io(this.serverUrl, {
+                        reconnectionAttempts: 5,
+                        timeout: 5000
+                    });
+
+                    this.socket.on('connect', () => {
+                        connDot.className = 'conn-dot online';
+                        connDot.style.background = '';
+                        connDot.style.boxShadow = '';
+                        connText.innerText = `Bağlandı (${this.serverUrl.replace(/^https?:\/\//, '')})`;
+                    });
+
+                    this.socket.on('connect_error', () => {
+                        connDot.className = 'conn-dot';
+                        connDot.style.background = '#ef4444';
+                        connDot.style.boxShadow = '0 0 8px #ef4444';
+                        connText.innerText = 'Bağlantı Hatası!';
+                    });
+
+                    // Socket events
+                    this.socket.on('error_message', (msg) => {
+                        alert(msg);
+                        this.hideWaitingPanel();
+                    });
+
+                    this.socket.on('room_created', (code) => {
+                        this.roomCode = code;
+                        this.myRole = 'p1';
+                        this.showWaitingPanel(`ODA KURULDU`, `Oyuncu 2 bekleniyor... Kod: ${code}`);
+                    });
+
+                    this.socket.on('room_joined', (code) => {
+                        this.roomCode = code;
+                        this.myRole = 'p2';
+                        this.showWaitingPanel(`ODAYA KATILINDI`, `Bağlantı kuruluyor...`);
+                    });
+
+                    this.socket.on('waiting_for_match', () => {
+                        this.showWaitingPanel(`EŞLEŞME ARANIYOR`, `Geçen Süre: 00:00`);
+                        this.startMatchmakingTimer();
+                    });
+
+                    this.socket.on('left_matchmaking', () => {
+                        this.hideWaitingPanel();
+                    });
+
+                    this.socket.on('start_online_game', ({ roomCode, playerRole }) => {
+                        this.isOnline = true;
+                        this.roomCode = roomCode;
+                        this.myRole = playerRole; // 'p1' or 'p2'
+                        
+                        this.hideWaitingPanel();
+                        this.startGame();
+                    });
+
+                    this.socket.on('opponent_placed_magnet', ({ x, y }) => {
+                        this.placeMagnet(x, y);
+                    });
+
+                    this.socket.on('opponent_restart_request', () => {
+                        document.getElementById('restart-confirm-modal').classList.remove('hidden');
+                    });
+
+                    this.socket.on('restart_game', () => {
+                        document.getElementById('restart-confirm-modal').classList.add('hidden');
+                        this.restartGame();
+                    });
+
+                    this.socket.on('opponent_disconnected', () => {
+                        document.getElementById('disconnect-modal').classList.remove('hidden');
+                        this.interactionEnabled = false;
+                    });
+
+                } catch (e) {
+                    console.error("Socket error", e);
+                }
+            }
+
+            startMatchmakingTimer() {
+                this.stopMatchmakingTimer();
+                this.matchmakingSeconds = 0;
+                const detailsNode = document.getElementById('waiting-details');
+                
+                this.matchmakingTimer = setInterval(() => {
+                    this.matchmakingSeconds++;
+                    const minutes = Math.floor(this.matchmakingSeconds / 60);
+                    const seconds = this.matchmakingSeconds % 60;
+                    const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    detailsNode.innerText = `Geçen Süre: ${timeStr}`;
+                }, 1000);
+            }
+
+            stopMatchmakingTimer() {
+                if (this.matchmakingTimer) {
+                    clearInterval(this.matchmakingTimer);
+                    this.matchmakingTimer = null;
+                }
+            }
+
+            showWaitingPanel(statusText, detailsText) {
+                document.getElementById('online-lobby-panel').classList.add('hidden');
+                document.getElementById('waiting-panel').classList.remove('hidden');
+                document.getElementById('waiting-status').innerText = statusText;
+                document.getElementById('waiting-details').innerText = detailsText;
+            }
+
+            hideWaitingPanel() {
+                this.stopMatchmakingTimer();
+                document.getElementById('waiting-panel').classList.add('hidden');
+                document.getElementById('online-lobby-panel').classList.remove('hidden');
+            }
+
+            startGame() {
+                this.scrStart.classList.add('hidden');
+                this.scrGame.classList.remove('hidden');
+                this.scrGameOver.classList.add('hidden');
+                this.restartGame();
+            }
+
+            restartGame() {
+                this.physics.clear();
+                this.particles.clear();
+                
+                this.activePlayer = 1;
+                this.simulating = false;
+                this.p1Lives = 5;
+                this.p2Lives = 5;
+                this.p1Hane = 0;
+                this.p2Hane = 0;
+                this.turnCounter = 0;
+                this.interactionEnabled = true;
+                this.mouseOnCanvas = false;
+
+                // Reset Action Logs
+                if (this.isOnline) {
+                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Çevrimiçi oyun başladı. Sıra Oyuncu 1'de.</div>`;
+                    
+                    // Update sidebars for who is who
+                    document.querySelector('.card-p1 .card-title').innerText = this.myRole === 'p1' ? 'SİZ (PLAYER 1)' : 'RAKİP (PLAYER 1)';
+                    document.querySelector('.card-p2 .card-title').innerText = this.myRole === 'p2' ? 'SİZ (PLAYER 2)' : 'RAKİP (PLAYER 2)';
+                } else {
+                    this.logBox.innerHTML = `<div class="log-entry log-system">[System] Game loaded. Player 1 starts placement.</div>`;
+                    
+                    document.querySelector('.card-p1 .card-title').innerText = 'Player 1';
+                    document.querySelector('.card-p2 .card-title').innerText = 'Player 2';
+                }
+                
+                this.updateUI();
+                this.scrGameOver.classList.add('hidden');
+
+                // Animate background glow transitions
+                document.getElementById('glow-left').style.opacity = '0.25';
+                document.getElementById('glow-right').style.opacity = '0.05';
+            }
+
+            updateMuteUI(isMuted) {
+                if (isMuted) {
+                    this.muteIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+                    this.btnMute.style.borderColor = 'rgba(255, 25, 75, 0.3)';
+                } else {
+                    this.muteIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+                    this.btnMute.style.borderColor = '';
+                }
+            }
+
+            addLog(text, className = '') {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${className}`;
+                entry.innerText = text;
+                this.logBox.appendChild(entry);
+                this.logBox.scrollTop = this.logBox.scrollHeight;
+            }
+
+            placeMagnet(x, y) {
+                const color = STONE_COLOR;
+                this.physics.addSingleMagnetCluster(x, y, this.activePlayer, color);
+                
+                sound.playClack();
+                this.particles.spawnSparks(x, y, color, 8);
+
+                this.addLog(`[Player ${this.activePlayer}] Stone placed at (${Math.round(x)}, ${Math.round(y)}).`, 
+                    this.activePlayer === 1 ? 'log-p1' : 'log-p2'
+                );
+
+                this.turnCounter++;
+
+                // Lock clicks immediately for physics updates
+                this.simulating = true;
+                this.updateUI();
+            }
+
+            // Central State Evaluator
+            updateUI() {
+                // Score calculations based on individual magnet ownership on board
+                let p1BoardCount = 0;
+                let p2BoardCount = 0;
+                let largestClusterSize = 0;
+
+                this.physics.clusters.forEach(c => {
+                    largestClusterSize = Math.max(largestClusterSize, c.mass);
+                    c.magnets.forEach(mag => {
+                        if (mag.owner === 1) p1BoardCount++;
+                        if (mag.owner === 2) p2BoardCount++;
+                    });
+                });
+
+                // Display glowing lives hearts
+                this.renderLivesUI();
+
+                // Display individual players' "Hane" (lifetime collected magnets)
+                this.lblScoreP1.innerText = this.p1Hane;
+                this.lblScoreP2.innerText = this.p2Hane;
+                
+                // Display total "Magnets on Board"
+                const totalOnBoard = p1BoardCount + p2BoardCount;
+                this.lblPool.innerText = totalOnBoard;
+                
+                // Progress bar fill scales relative to a crowding factor (e.g. 15 magnets)
+                const percentage = Math.min((totalOnBoard / 15) * 100, 100);
+                this.barPool.style.width = `${percentage}%`;
+
+                // Handle turn header banner text changes
+                if (this.simulating) {
+                    this.lblTurn.innerText = "SİMÜLASYON HESAPLANIYOR...";
+                    this.lblTurn.className = "glass-panel turn-banner turn-simulating";
+                } else {
+                    if (this.isOnline) {
+                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        this.lblTurn.innerText = isMyTurn ? `SIRA SİZDE (OYUNCU ${this.activePlayer})` : `SIRA RAKİPTE (OYUNCU ${this.activePlayer})`;
+                    } else {
+                        this.lblTurn.innerText = `OYUNCU ${this.activePlayer}'İN SIRASI`;
+                    }
+                    this.lblTurn.className = `glass-panel turn-banner turn-${this.activePlayer === 1 ? 'p1' : 'p2'}`;
+                }
+
+                // Check active game over states
+                this.checkGameOver(largestClusterSize);
+            }
+
+            renderLivesUI() {
+                const renderHearts = (containerId, livesCount) => {
+                    const container = document.getElementById(containerId);
+                    if (!container) return;
+                    
+                    let html = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const isLost = i > livesCount;
+                        html += `
+                            <svg class="heart-icon ${isLost ? 'lost' : ''}" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        `;
+                    }
+                    container.innerHTML = html;
+                };
+                
+                renderHearts('lives-p1', this.p1Lives);
+                renderHearts('lives-p2', this.p2Lives);
+            }
+
+            checkGameOver(largestClusterSize) {
+                let isGameOver = false;
+                let winner = 0;
+                let loser = 0;
+                let reason = "";
+
+                // Condition A: A player's lives drops to 0 -> Loss!
+                if (this.p1Lives === 0) {
+                    isGameOver = true;
+                    winner = 2;
+                    loser = 1;
+                    reason = "Canlarınız bitti (0/5 Can kaldı).";
+                } else if (this.p2Lives === 0) {
+                    isGameOver = true;
+                    winner = 1;
+                    loser = 2;
+                    reason = "Canlarınız bitti (0/5 Can kaldı).";
+                }
+
+                // If Game Over, transition screens
+                if (isGameOver) {
+                    this.interactionEnabled = false;
+                    
+                    const winnerColor = winner === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
+                    const loserColor = loser === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
+                    
+                    document.getElementById('game-over-title').innerText = `OYUNCU ${loser} KAYBETTİ!`;
+                    document.getElementById('game-over-title').style.color = loserColor;
+                    document.getElementById('game-over-title').style.textShadow = `0 0 15px ${loser === 1 ? 'var(--p1-glow)' : 'var(--p2-glow)'}`;
+                    
+                    document.getElementById('loser-reason').innerText = reason;
+                    
+                    const winnerTextNode = document.getElementById('winner-text');
+                    winnerTextNode.innerText = `OYUNCU ${winner} KAZANDI!`;
+                    winnerTextNode.style.color = winnerColor;
+                    winnerTextNode.style.textShadow = `0 0 15px ${winner === 1 ? 'var(--p1-glow)' : 'var(--p2-glow)'}`;
+
+                    document.getElementById('stat-turns').innerText = this.turnCounter;
+                    document.getElementById('stat-hane-p1').innerText = this.p1Hane;
+                    document.getElementById('stat-hane-p2').innerText = this.p2Hane;
+                    document.getElementById('stat-cluster').innerText = largestClusterSize;
+
+                    // Delay game over overlay display for smooth screen settling
+                    setTimeout(() => {
+                        this.scrGameOver.classList.remove('hidden');
+                        if (winner === 1) sound.playWin();
+                        else sound.playLose();
+                    }, 1200);
+                }
+            }
+
+            // Master Animation Loop
+            tick() {
+                // Update and render main particles
+                this.particles.update();
+
+                // Handle active physics updates
+                if (this.simulating) {
+                    const isMoving = this.physics.update();
+                    
+                    // Once all magnets settle to zero velocity
+                    if (!isMoving) {
+                        this.simulating = false;
+                        
+                        // Switch active player turns
+                        this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+                        this.updateUI();
+
+                        // Soft animated background glow shifts
+                        if (this.activePlayer === 1) {
+                            document.getElementById('glow-left').style.opacity = '0.25';
+                            document.getElementById('glow-right').style.opacity = '0.05';
+                        } else {
+                            document.getElementById('glow-left').style.opacity = '0.05';
+                            document.getElementById('glow-right').style.opacity = '0.25';
+                        }
+
+                        if (this.isOnline) {
+                            this.addLog(`[Sistem] Sıra Oyuncu ${this.activePlayer}'de.`, 
+                                this.activePlayer === 1 ? 'log-p1' : 'log-p2'
+                            );
+                        } else {
+                            this.addLog(`[System] Turn passed to Player ${this.activePlayer}.`, 
+                                this.activePlayer === 1 ? 'log-p1' : 'log-p2'
+                            );
+                        }
+                    }
+                }
+
+                // Render board physics
+                this.physics.draw();
+
+                // Draw Overlay Hover tactical previews if active placement is allowed
+                if (this.interactionEnabled && !this.simulating && this.mouseOnCanvas) {
+                    if (this.isOnline) {
+                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        if (isMyTurn) {
+                            this.drawCanvasOverlay();
+                        }
+                    } else {
+                        this.drawCanvasOverlay();
+                    }
+                }
+            }
+
+            // Handles drawings of attraction boundaries, vector springs, and ghost previews
+            drawCanvasOverlay() {
+                const ctx = this.physics.ctx;
+                const mX = this.mousePos.x;
+                const mY = this.mousePos.y;
+                const activeColor = this.activePlayer === 1 ? P1_COLOR : P2_COLOR;
+
+                const isValid = this.physics.validatePlacement(mX, mY);
+
+                ctx.save();
+                
+                if (isValid) {
+                    // 1. Draw dashed line for active attraction threshold field
+                    ctx.strokeStyle = activeColor;
+                    ctx.lineWidth = 1;
+                    ctx.globalAlpha = 0.25;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(mX, mY, this.physics.ATTRACTION_THRESHOLD, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // 2. Draw glowing attraction vector field connecting preview to existing board magnets
+                    this.physics.clusters.forEach(c => {
+                        c.magnets.forEach(mag => {
+                            const absX = c.cx + mag.rx;
+                            const absY = c.cy + mag.ry;
+
+                            const dx = absX - mX;
+                            const dy = absY - mY;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < this.physics.ATTRACTION_THRESHOLD) {
+                                // Vector line gets brighter as magnets get closer
+                                const strength = 1 - (dist / this.physics.ATTRACTION_THRESHOLD);
+                                ctx.save();
+                                ctx.strokeStyle = activeColor;
+                                ctx.globalAlpha = strength * 0.45;
+                                ctx.lineWidth = 1.5 + strength * 2.0;
+                                ctx.setLineDash([]);
+                                
+                                // Glowing vector stroke
+                                ctx.shadowBlur = 8;
+                                ctx.shadowColor = activeColor;
+                                
+                                ctx.beginPath();
+                                ctx.moveTo(mX, mY);
+                                ctx.lineTo(absX, absY);
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+                        });
+                    });
+
+                    // 3. Draw premium tactile 3D semi-transparent ghost preview
+                    this.physics.draw3DMagnet(mX, mY, this.activePlayer, 0.45);
+
+                } else {
+                    // If hovered placement is illegal: draw a vibrating warning neon red aura
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = 'var(--p2-color)';
+                    ctx.strokeStyle = 'var(--p2-color)';
+                    ctx.lineWidth = 2.5;
+                    
+                    ctx.beginPath();
+                    ctx.arc(mX, mY, this.physics.MAGNET_RADIUS, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Tiny inner 'X' cross warning mark
+                    ctx.beginPath();
+                    ctx.moveTo(mX - 4, mY - 4);
+                    ctx.lineTo(mX + 4, mY + 4);
+                    ctx.moveTo(mX + 4, mY - 4);
+                    ctx.lineTo(mX - 4, mY + 4);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // Initialize Game Instance
+        let game;
+        window.addEventListener('load', () => {
+            game = new GameController();
+
+            // Set animation ticks
+            function animate() {
+                game.tick();
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+        });
+
+        /* ==========================================================================
+           E. START SCREEN AMBIENT PASSIVE LIVE CANVAS SIMULATION
+           ========================================================================== */
+        class AmbientMagnet {
+            constructor(x, y, color, size) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 1.2;
+                this.vy = (Math.random() - 0.5) * 1.2;
+                this.color = color;
+                this.size = size;
+            }
+
+            update(w, h) {
+                // Soft attractive force towards center
+                const cx = w / 2;
+                const cy = h / 2;
+                const dx = cx - this.x;
+                const dy = cy - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                
+                this.vx += (dx / dist) * 0.005;
+                this.vy += (dy / dist) * 0.005;
+
+                // Drift update
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Slow damping friction
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+
+                // Border bounce limits
+                if (this.x < 50 || this.x > w - 50) this.vx *= -1;
+                if (this.y < 50 || this.y > h - 50) this.vy *= -1;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = '#181b2a';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Colored core glow
+                ctx.shadowBlur = 0;
+                const radGrad = ctx.createRadialGradient(
+                    this.x - this.size * 0.3, this.y - this.size * 0.3, 1,
+                    this.x, this.y, this.size
+                );
+                radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+                radGrad.addColorStop(0.3, this.color);
+                radGrad.addColorStop(1, '#050508');
+                ctx.fillStyle = radGrad;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        const bgCanvas = document.getElementById('menu-bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgMagnets = [];
+
+        function initBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            
+            bgMagnets = [];
+            const colors = ['hsl(190, 100%, 50%)', 'hsl(350, 100%, 55%)', 'hsl(45, 100%, 55%)'];
+            
+            for (let i = 0; i < 7; i++) {
+                const x = Math.random() * bgCanvas.width;
+                const y = Math.random() * bgCanvas.height;
+                const col = colors[i % colors.length];
+                bgMagnets.push(new AmbientMagnet(x, y, col, 14 + Math.random() * 6));
+            }
+        }
+
+        function animateBgCanvas() {
+            // Render subtle ambient lines and drifting magnet fields
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            // Only draw background magnets when start screen is active
+            if (game && !game.scrStart.classList.contains('hidden')) {
+                // Interactive attraction lines between ambient floating nodes
+                bgCtx.save();
+                bgCtx.lineWidth = 1;
+                for (let i = 0; i < bgMagnets.length; i++) {
+                    for (let j = i + 1; j < bgMagnets.length; j++) {
+                        const m1 = bgMagnets[i];
+                        const m2 = bgMagnets[j];
+                        const dx = m2.x - m1.x;
+                        const dy = m2.y - m1.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 350) {
+                            // Soft visual attraction force thread
+                            const alpha = (1 - dist / 350) * 0.08;
+                            bgCtx.strokeStyle = 'rgba(255, 255, 255, 1)';
+                            bgCtx.globalAlpha = alpha;
+                            bgCtx.beginPath();
+                            bgCtx.moveTo(m1.x, m1.y);
+                            bgCtx.lineTo(m2.x, m2.y);
+                            bgCtx.stroke();
+                        }
+                    }
+                }
+                bgCtx.restore();
+
+                bgMagnets.forEach(m => {
+                    m.update(bgCanvas.width, bgCanvas.height);
+                    m.draw(bgCtx);
+                });
+            }
+
+            requestAnimationFrame(animateBgCanvas);
+        }
+
+        window.addEventListener('resize', initBgCanvas);
+        window.addEventListener('load', () => {
+            initBgCanvas();
+            animateBgCanvas();
+        });
+    </script>
+
+    <!-- ==========================================================================
+       DISCONNECT OVERLAY
+       ========================================================================== -->
+    <div id="disconnect-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-card" style="max-width: 450px; text-align: center; gap: 24px;">
+            <h2 style="color: var(--p2-color); text-shadow: 0 0 10px var(--p2-glow); font-size: 1.8rem; font-weight: 800;">RAKİP AYRILDI</h2>
+            <p style="color: var(--text-light); line-height: 1.6;">Maalesef rakibinizin bağlantısı koptu veya oyundan ayrıldı.</p>
+            <button class="btn btn-primary" id="btn-disconnect-quit">LOBİYE DÖN</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       RESTART CONFIRMATION MODAL
+       ========================================================================== -->
+    <div id="restart-confirm-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-card" style="max-width: 450px; text-align: center; gap: 24px;">
+            <h2 style="color: var(--gold-color); text-shadow: 0 0 10px var(--gold-glow); font-size: 1.8rem; font-weight: 800;">YENİDEN BAŞLATMA İSTEĞİ</h2>
+            <p style="color: var(--text-light); line-height: 1.6;">Rakibiniz oyunu yeniden başlatmak istiyor. Kabul ediyor musunuz?</p>
+            <div class="lobby-row">
+                <button class="btn btn-primary" id="btn-restart-accept">KABUL ET</button>
+                <button class="btn btn-secondary" id="btn-restart-decline">REDDET</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
