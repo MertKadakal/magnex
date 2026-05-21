@@ -390,7 +390,7 @@
         .arena-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
+            max-width: 700px;
             aspect-ratio: 1 / 1;
             display: flex;
             justify-content: center;
@@ -1002,7 +1002,7 @@
 
             <!-- Center Tabletop Canvas -->
             <div class="arena-container">
-                <canvas id="game-canvas" width="600" height="600"></canvas>
+                <canvas id="game-canvas" width="700" height="700"></canvas>
             </div>
 
             <!-- Right Sidebar: Player 2 Status & Actions -->
@@ -1070,7 +1070,11 @@
 
             <button class="btn btn-primary" id="btn-play-again" style="margin-top: 10px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                PLAY AGAIN
+                YENİDEN OYNA (PLAY AGAIN)
+            </button>
+            <button class="btn btn-secondary" id="btn-gameover-home" style="margin-top: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                ANA SAYFAYA DÖN (HOME)
             </button>
         </div>
     </div>
@@ -1515,8 +1519,8 @@
                 this.particles = particleEngine;
                 
                 // Arena Constants
-                this.arenaRadius = 265; // Dynamic boundary limit inside a 300 radius felt
-                this.arenaCenter = { x: 300, y: 300 };
+                this.arenaRadius = 310; // Dynamic boundary limit inside a 340 radius felt (for 700x700 canvas)
+                this.arenaCenter = { x: 350, y: 350 };
 
                 // Physics Constants
                 this.MAGNET_RADIUS = 13.5;
@@ -1806,12 +1810,12 @@
                 // A. Draw Felt Circular Table Base
                 this.ctx.save();
                 this.ctx.beginPath();
-                this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, 290, 0, Math.PI * 2);
+                this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, 340, 0, Math.PI * 2);
                 
                 // Felt tabletop gradient
                 const feltGrad = this.ctx.createRadialGradient(
                     this.arenaCenter.x, this.arenaCenter.y, 50, 
-                    this.arenaCenter.x, this.arenaCenter.y, 300
+                    this.arenaCenter.x, this.arenaCenter.y, 340
                 );
                 feltGrad.addColorStop(0, '#0c0f20');
                 feltGrad.addColorStop(0.7, '#070914');
@@ -1841,10 +1845,10 @@
                 
                 // Inner lines
                 this.ctx.beginPath();
-                this.ctx.moveTo(this.arenaCenter.x - 280, this.arenaCenter.y);
-                this.ctx.lineTo(this.arenaCenter.x + 280, this.arenaCenter.y);
-                this.ctx.moveTo(this.arenaCenter.x, this.arenaCenter.y - 280);
-                this.ctx.lineTo(this.arenaCenter.x, this.arenaCenter.y + 280);
+                this.ctx.moveTo(this.arenaCenter.x - 330, this.arenaCenter.y);
+                this.ctx.lineTo(this.arenaCenter.x + 330, this.arenaCenter.y);
+                this.ctx.moveTo(this.arenaCenter.x, this.arenaCenter.y - 330);
+                this.ctx.lineTo(this.arenaCenter.x, this.arenaCenter.y + 330);
                 this.ctx.stroke();
                 this.ctx.restore();
 
@@ -2052,7 +2056,15 @@
                         alert("Sunucuya bağlı değilsiniz! Lütfen bağlantıyı kontrol edin.");
                         return;
                     }
-                    const code = Math.floor(1000 + Math.random() * 9000).toString();
+                    const codeInput = document.getElementById('txt-room-code');
+                    let code = codeInput.value.trim().toUpperCase();
+                    
+                    if (code.length !== 4) {
+                        // Generate random 4-digit code
+                        code = Math.floor(1000 + Math.random() * 9000).toString();
+                        codeInput.value = code;
+                    }
+                    
                     this.socket.emit('create_room', code);
                 });
 
@@ -2146,6 +2158,19 @@
                         this.socket.emit('restart_request', { roomCode: this.roomCode });
                     } else {
                         this.restartGame();
+                    }
+                });
+
+                // Game Over - Ana Sayfaya Dön
+                document.getElementById('btn-gameover-home').addEventListener('click', () => {
+                    this.scrGameOver.classList.add('hidden');
+                    this.scrGame.classList.add('hidden');
+                    this.scrStart.classList.remove('hidden');
+                    document.getElementById('online-lobby-panel').classList.add('hidden');
+                    document.getElementById('main-menu-buttons').classList.remove('hidden');
+                    if (this.socket) {
+                        this.socket.disconnect();
+                        this.socket = null;
                     }
                 });
 
