@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAGNEX — Modern 2D Magnetic Tabletop Physics Game</title>
+    <title>MAGNEX — Modern 2D Manyetik Masa Fiziği Oyunu</title>
     <!-- Modern Premium Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -902,7 +902,7 @@
                 <div class="logo-text">MAGNEX</div>
                 <div class="logo-glow">MAGNEX</div>
             </div>
-            <div class="subtitle">Tactical Magnetic Tabletop</div>
+            <div class="subtitle">Taktiksel Manyetik Masa</div>
             
             <!-- Main Options -->
             <div id="main-menu-buttons" class="lobby-panel">
@@ -977,22 +977,19 @@
             
             <!-- Turn Indicator Header -->
             <div class="glass-panel turn-banner turn-p1" id="turn-banner">
-                PLAYER 1'S TURN
+                OYUNCU 1'İN SIRASI
             </div>
 
             <!-- Left Sidebar: Player 1 Status -->
             <div class="sidebar">
-                <div class="glass-panel card-stats card-p1" style="cursor: pointer;" title="Click to view board hint">
-                    <div class="card-title">Player 1</div>
+                <div class="glass-panel card-stats card-p1" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
+                    <div class="card-title">OYUNCU 1</div>
                     <div class="lives-container" id="lives-p1"></div>
-                    <div class="hane-container">
-                        <span class="hane-label">Hane:</span>
-                        <span class="hane-val score-p1" id="score-p1">0</span>
-                    </div>
+
                 </div>
 
-                <div class="glass-panel pool-card" style="cursor: pointer;" title="Click to view board hint">
-                    <div class="card-title">Stones on Board</div>
+                <div class="glass-panel pool-card" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
+                    <div class="card-title">Tahtadaki Taşlar</div>
                     <div class="pool-count" id="pool-count">0</div>
                     <div class="pool-bar-container">
                         <div class="pool-bar-fill" id="pool-bar-fill"></div>
@@ -1007,29 +1004,25 @@
 
             <!-- Right Sidebar: Player 2 Status & Actions -->
             <div class="sidebar">
-                <div class="glass-panel card-stats card-p2" style="cursor: pointer;" title="Click to view board hint">
-                    <div class="card-title">Player 2</div>
+                <div class="glass-panel card-stats card-p2" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
+                    <div class="card-title">OYUNCU 2</div>
                     <div class="lives-container" id="lives-p2"></div>
-                    <div class="hane-container">
-                        <span class="hane-label">Hane:</span>
-                        <span class="hane-val score-p2" id="score-p2">0</span>
-                    </div>
                 </div>
 
                 <!-- Scrolling Event Console -->
                 <div class="glass-panel log-card">
-                    <div class="card-title" style="text-align:left;">Action Log</div>
+                    <div class="card-title" style="text-align:left;">İşlem Günlüğü</div>
                     <div class="log-box" id="log-box">
-                        <div class="log-entry log-system">[System] Game loaded. Player 1 starts placement.</div>
+                        <div class="log-entry log-system">[Sistem] Oyun yüklendi. Oyuncu 1 yerleştirmeye başladı.</div>
                     </div>
                 </div>
 
                 <!-- Bottom Controls -->
                 <div class="control-row">
-                    <button class="btn btn-secondary btn-icon" id="btn-mute" title="Toggle Sound">
+                    <button class="btn btn-secondary btn-icon" id="btn-mute" title="Sesi Aç/Kapat">
                         <svg id="mute-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                     </button>
-                    <button class="btn btn-secondary btn-icon" id="btn-restart" title="Restart Game">
+                    <button class="btn btn-secondary btn-icon" id="btn-restart" title="Oyunu Yeniden Başlat">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
                     </button>
                 </div>
@@ -1043,27 +1036,27 @@
        ========================================================================== -->
     <div id="game-over-screen" class="screen-container hidden">
         <div class="glass-panel game-over-card">
-            <div class="game-over-title" id="game-over-title">PLAYER X LOST!</div>
-            <div class="loser-text" id="loser-reason">Ran out of lives (0/5 Can remaining).</div>
+            <div class="game-over-title" id="game-over-title">OYUNCU X KAYIPTI!</div>
+            <div class="loser-text" id="loser-reason">Canları bitmiş (0/5 Can kaldı).</div>
             
-            <div class="winner-announcement" id="winner-text">PLAYER Y WINS!</div>
+            <div class="winner-announcement" id="winner-text">OYUNCU Y KAZANDI!</div>
 
             <!-- Match Statistics -->
             <div class="game-stats-grid">
                 <div class="stat-item">
-                    <span class="stat-label">Total Turns</span>
+                    <span class="stat-label">Toplam Turlar</span>
                     <span class="stat-val" id="stat-turns">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">P1 Snapped (Hane)</span>
+                    <span class="stat-label">O1 Yapışan (Hane)</span>
                     <span class="stat-val score-p1" id="stat-hane-p1">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">P2 Snapped (Hane)</span>
+                    <span class="stat-label">O2 Yapışan (Hane)</span>
                     <span class="stat-val score-p2" id="stat-hane-p2">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Largest Cluster</span>
+                    <span class="stat-label">Büyük Küme</span>
                     <span class="stat-val" id="stat-cluster">0</span>
                 </div>
             </div>
@@ -1085,7 +1078,7 @@
     <div id="rules-modal" class="modal-overlay hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
-                <h2>How To Play MAGNEX</h2>
+                <h2>MAGNEX Nasıl Oynanır</h2>
                 <button class="close-btn" id="btn-close-rules">&times;</button>
             </div>
             
@@ -1093,32 +1086,32 @@
                 <div class="rule-step">
                     <div class="rule-num">1</div>
                     <div class="rule-text">
-                        <h3>Turn-Based Placement</h3>
-                        <p>Players take turns placing a single magnet on any empty spot inside the circular tabletop arena. All placed stones are visually monochrome neon-white metallic spheres.</p>
+                        <h3>Sıra Tabanlı Yerleştirme</h3>
+                        <p>Oyuncular dairesel masa alanının herhangi bir boş yerine sırayla tek bir manyetik taş yerleştirirler. Yerleştirilen tüm taşlar görsel olarak monokromatik neon-beyaz metalik kürelerdir.</p>
                     </div>
                 </div>
 
                 <div class="rule-step">
                     <div class="rule-num">2</div>
                     <div class="rule-text">
-                        <h3>Magnetic Pull (Physics)</h3>
-                        <p>All placed stones slide freely. When the distance between any two is within the attraction circle (150px threshold), they begin pulling each other together following the <strong>Inverse-Square Law</strong>.</p>
+                        <h3>Manyetik Çekim (Fizik)</h3>
+                        <p>Yerleştirilen tüm taşlar serbestçe kayar. İki taş arasındaki mesafe çekim alanı içinde (150 piksel eşiği) olduğunda, <strong>Ters-Kare Yasası</strong> uyarınca birbirlerine çekilmeye başlarlar.</p>
                     </div>
                 </div>
 
                 <div class="rule-step">
                     <div class="rule-num">3</div>
                     <div class="rule-text">
-                        <h3>Snap Penalty</h3>
-                        <p>When stones pull together and collide, they instantly snap! Triggering a snap removes all colliding stones from the board, adds them to your snapped count (Hane), and deducts 1 Life (Can).</p>
+                        <h3>Yapışma Cezası</h3>
+                        <p>Taşlar birbirine çekilip çarpışınca anında yapışır! Yapışma tetiklenince çarpışan tüm taşlar tableden kaldırılır, yapışma sayınıza (Hane) eklenir ve 1 Can düşülür.</p>
                     </div>
                 </div>
 
                 <div class="rule-step">
                     <div class="rule-num">4</div>
                     <div class="rule-text">
-                        <h3>Lives & Win Conditions</h3>
-                        <p>Each player starts with 5 Lives (Can) and an unlimited pool of stones. The first player whose lives drop to 0 loses instantly, crowning the other player as the victor!</p>
+                        <h3>Can ve Kazanma Koşulları</h3>
+                        <p>Her oyuncu 5 Can ve sınırsız taş havuzu ile başlar. Canları 0'a düşen ilk oyuncu anında kaybeder ve diğer oyuncu zaferini ilan eder!</p>
                     </div>
                 </div>
             </div>
@@ -1135,7 +1128,7 @@
         window.addEventListener('error', (e) => {
             console.error("Global Error Caught:", e);
             if (window.game && typeof window.game.addLog === 'function') {
-                window.game.addLog(`[Error] ${e.message} at ${e.filename ? e.filename.split('/').pop() : 'script'}:${e.lineno}`, 'log-system');
+                window.game.addLog(`[Hata] ${e.message} at ${e.filename ? e.filename.split('/').pop() : 'script'}:${e.lineno}`, 'log-system');
             }
         });
 
@@ -1726,7 +1719,7 @@
                 }
 
                 // 4. Add action log entry
-                game.addLog(`[Physics] Snap! Player ${activePlayer} triggered a collision! -1 Life (Can), collected +${snappedCount} stones to Hane.`, `log-physics`);
+                game.addLog(`[Fizik] Yapış! Oyuncu ${activePlayer} bir çarpışma tetikledi! -1 Can, ${snappedCount} taş Hane'ye eklendi.`, `log-physics`);
             }
 
             // Standard elastic bouncing boundaries with circular table borders
@@ -2218,7 +2211,7 @@
                     } else {
                         // Play a light fail warning flash
                         sound.playBounce();
-                        this.addLog(`[System] Invalid placement! Cannot overlap or place outside bounds.`, `log-system`);
+                        this.addLog(`[Sistem] Geçersiz yerleştirme! Çakışamaz ve sınırlar dışına yerleştiremezsiniz.`, `log-system`);
                     }
                 });
 
@@ -2271,7 +2264,7 @@
                         this.placeMagnet(x, y);
                     } else {
                         sound.playBounce();
-                        this.addLog(`[System] Invalid placement! Cannot overlap or place outside bounds.`, `log-system`);
+                        this.addLog(`[Sistem] Geçersiz yerleştirme! Çakışamaz ve sınırlar dışına yerleştiremezsiniz.`, `log-system`);
                     }
                 }, { passive: false });
 
@@ -2449,7 +2442,7 @@
                     document.querySelector('.card-p1 .card-title').innerText = this.myRole === 'p1' ? 'SİZ (PLAYER 1)' : 'RAKİP (PLAYER 1)';
                     document.querySelector('.card-p2 .card-title').innerText = this.myRole === 'p2' ? 'SİZ (PLAYER 2)' : 'RAKİP (PLAYER 2)';
                 } else {
-                    this.logBox.innerHTML = `<div class="log-entry log-system">[System] Game loaded. Player 1 starts placement.</div>`;
+                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Oyun yüklendi. Oyuncu 1 yerleştirmeye başladı.</div>`;
                     
                     document.querySelector('.card-p1 .card-title').innerText = 'Player 1';
                     document.querySelector('.card-p2 .card-title').innerText = 'Player 2';
@@ -2650,7 +2643,7 @@
                                 this.activePlayer === 1 ? 'log-p1' : 'log-p2'
                             );
                         } else {
-                            this.addLog(`[System] Turn passed to Player ${this.activePlayer}.`, 
+                            this.addLog(`[Sistem] Sıra Oyuncu ${this.activePlayer}'de.`, 
                                 this.activePlayer === 1 ? 'log-p1' : 'log-p2'
                             );
                         }
