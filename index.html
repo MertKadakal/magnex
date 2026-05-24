@@ -386,6 +386,21 @@
             transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
+        .pool-meta,
+        .obstacle-status {
+            margin-top: 10px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--text-gray);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .obstacle-status.active {
+            color: var(--gold-color);
+            text-shadow: 0 0 8px var(--gold-glow);
+        }
+
         /* Arena Container */
         .arena-container {
             position: relative;
@@ -402,6 +417,11 @@
             margin: 0 auto;
         }
 
+        .arena-container.shape-square,
+        .arena-container.shape-triangle {
+            border-radius: 24px;
+        }
+
         #game-canvas {
             width: 100%;
             height: 100%;
@@ -409,6 +429,15 @@
             background: transparent;
             z-index: 5;
             cursor: crosshair;
+        }
+
+        #game-canvas.shape-square,
+        #game-canvas.shape-triangle {
+            border-radius: 24px;
+        }
+
+        #game-canvas.pool-hover-shake {
+            animation: poolSubtleShake 0.46s ease-in-out infinite;
         }
 
         /* Action Log Card */
@@ -726,6 +755,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes poolSubtleShake {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            25% { transform: translate3d(1px, -0.7px, 0); }
+            50% { transform: translate3d(-0.9px, 0.8px, 0); }
+            75% { transform: translate3d(0.7px, 0.5px, 0); }
+        }
+
         /* Responsive Scaling for smaller heights / widths */
         @media (max-height: 800px) {
             .game-layout {
@@ -737,6 +773,67 @@
             }
             .log-card {
                 height: 120px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                align-items: flex-start;
+                overflow-y: auto;
+            }
+
+            .screen-container {
+                min-height: 100vh;
+                height: auto;
+                padding: 12px;
+                overflow-y: auto;
+            }
+
+            #game-screen {
+                justify-content: flex-start;
+            }
+
+            .game-layout {
+                grid-template-columns: 1fr;
+                max-width: 680px;
+                gap: 12px;
+            }
+
+            .turn-banner {
+                grid-column: 1;
+                grid-row: 1;
+                padding: 10px 12px;
+                font-size: 0.86rem;
+                letter-spacing: 0.08em;
+            }
+
+            .arena-container {
+                grid-row: 2;
+                width: min(92vw, 560px);
+                max-width: 560px;
+            }
+
+            .game-layout > .sidebar:first-of-type {
+                grid-row: 3;
+            }
+
+            .game-layout > .sidebar:last-of-type {
+                grid-row: 4;
+            }
+
+            .sidebar {
+                height: auto;
+                gap: 12px;
+            }
+
+            .card-stats,
+            .pool-card,
+            .log-card {
+                border-radius: 16px;
+            }
+
+            .log-card {
+                height: 140px;
             }
         }
 
@@ -985,7 +1082,10 @@
                 <div class="glass-panel card-stats card-p1" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
                     <div class="card-title">OYUNCU 1</div>
                     <div class="lives-container" id="lives-p1"></div>
-
+                    <div class="hane-container">
+                        <span class="hane-label">Hane</span>
+                        <span class="hane-val score-p1" id="score-p1">0</span>
+                    </div>
                 </div>
 
                 <div class="glass-panel pool-card" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
@@ -994,6 +1094,8 @@
                     <div class="pool-bar-container">
                         <div class="pool-bar-fill" id="pool-bar-fill"></div>
                     </div>
+                    <div class="pool-meta" id="pool-shape-label">DAIRE POOL</div>
+                    <div class="obstacle-status" id="obstacle-status">ENGEL HAKKI: 0 / 5</div>
                 </div>
             </div>
 
@@ -1007,6 +1109,10 @@
                 <div class="glass-panel card-stats card-p2" style="cursor: pointer;" title="Tahta ipucu görüntülemek için tıklayın">
                     <div class="card-title">OYUNCU 2</div>
                     <div class="lives-container" id="lives-p2"></div>
+                    <div class="hane-container">
+                        <span class="hane-label">Hane</span>
+                        <span class="hane-val score-p2" id="score-p2">0</span>
+                    </div>
                 </div>
 
                 <!-- Scrolling Event Console -->
@@ -1024,6 +1130,9 @@
                     </button>
                     <button class="btn btn-secondary btn-icon" id="btn-restart" title="Oyunu Yeniden Başlat">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" id="btn-home" title="Ana Sayfaya Dön">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                     </button>
                 </div>
             </div>
@@ -1138,6 +1247,10 @@
         const GOLD_COLOR = 'hsl(45, 100%, 55%)';  // Neon Gold
         const STONE_COLOR = '#ffffff';            // Neon White Chrome Sphere
         const STONE_GLOW = 'rgba(255, 255, 255, 0.4)';
+        const ARENA_SHAPES = ['circle', 'square', 'triangle'];
+        const ARENA_LABELS = { circle: 'DAIRE', square: 'KARE', triangle: 'UCGEN' };
+        const OBSTACLE_LENGTH = 96;
+        const OBSTACLE_WIDTH = 32;
 
         /* ==========================================================================
            A. AUDIO SYNTHESIZER (WEB AUDIO API)
@@ -1146,6 +1259,9 @@
             constructor() {
                 this.ctx = null;
                 this.muted = false;
+                this.ambientWanted = false;
+                this.ambientNodes = null;
+                this.ambientVolume = 0.032;
             }
 
             init() {
@@ -1166,7 +1282,112 @@
 
             toggleMute() {
                 this.muted = !this.muted;
+                if (this.muted) {
+                    this.setAmbientVolume(0);
+                } else if (this.ambientWanted) {
+                    this.startAmbient();
+                }
                 return this.muted;
+            }
+
+            setAmbientVolume(volume) {
+                if (!this.ambientNodes || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    this.ambientNodes.master.gain.cancelScheduledValues(now);
+                    this.ambientNodes.master.gain.linearRampToValueAtTime(volume, now + 0.25);
+                } catch (e) {
+                    console.warn("setAmbientVolume failed:", e);
+                }
+            }
+
+            startAmbient() {
+                this.ambientWanted = true;
+                if (this.muted) return;
+
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+
+                    if (this.ambientNodes) {
+                        this.setAmbientVolume(this.ambientVolume);
+                        return;
+                    }
+
+                    const now = this.ctx.currentTime;
+                    const master = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+                    const lfo = this.ctx.createOscillator();
+                    const lfoGain = this.ctx.createGain();
+                    const oscA = this.ctx.createOscillator();
+                    const oscB = this.ctx.createOscillator();
+                    const oscC = this.ctx.createOscillator();
+
+                    master.gain.setValueAtTime(0, now);
+                    master.gain.linearRampToValueAtTime(this.ambientVolume, now + 1.2);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(520, now);
+                    filter.Q.setValueAtTime(0.7, now);
+
+                    lfo.type = 'sine';
+                    lfo.frequency.setValueAtTime(0.045, now);
+                    lfoGain.gain.setValueAtTime(160, now);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(filter.frequency);
+
+                    oscA.type = 'sine';
+                    oscA.frequency.setValueAtTime(98, now);
+                    oscB.type = 'triangle';
+                    oscB.frequency.setValueAtTime(146.83, now);
+                    oscC.type = 'sine';
+                    oscC.frequency.setValueAtTime(196, now);
+
+                    oscA.connect(filter);
+                    oscB.connect(filter);
+                    oscC.connect(filter);
+                    filter.connect(master);
+                    master.connect(this.ctx.destination);
+
+                    oscA.start();
+                    oscB.start();
+                    oscC.start();
+                    lfo.start();
+
+                    this.ambientNodes = { master, filter, lfo, lfoGain, oscillators: [oscA, oscB, oscC] };
+                } catch (e) {
+                    console.warn("startAmbient failed:", e);
+                }
+            }
+
+            stopAmbient() {
+                this.ambientWanted = false;
+                if (!this.ambientNodes || !this.ctx) return;
+
+                try {
+                    const nodes = this.ambientNodes;
+                    const now = this.ctx.currentTime;
+                    nodes.master.gain.cancelScheduledValues(now);
+                    nodes.master.gain.linearRampToValueAtTime(0.0001, now + 0.35);
+
+                    setTimeout(() => {
+                        try {
+                            nodes.oscillators.forEach(osc => osc.stop());
+                            nodes.lfo.stop();
+                            nodes.oscillators.forEach(osc => osc.disconnect());
+                            nodes.lfo.disconnect();
+                            nodes.lfoGain.disconnect();
+                            nodes.filter.disconnect();
+                            nodes.master.disconnect();
+                        } catch (err) {
+                            console.warn("ambient node cleanup failed:", err);
+                        }
+                    }, 420);
+                } catch (e) {
+                    console.warn("stopAmbient failed:", e);
+                } finally {
+                    this.ambientNodes = null;
+                }
             }
 
             playClack() {
@@ -1514,6 +1735,7 @@
                 // Arena Constants
                 this.arenaRadius = 310; // Dynamic boundary limit inside a 340 radius felt (for 700x700 canvas)
                 this.arenaCenter = { x: 350, y: 350 };
+                this.arenaShape = 'circle';
 
                 // Physics Constants
                 this.MAGNET_RADIUS = 13.5;
@@ -1523,7 +1745,155 @@
                 this.RESTITUTION = 0.6; // Boundary elastic collision reflection
 
                 this.clusters = [];
+                this.obstacles = [];
                 this.clusterIdCounter = 0;
+            }
+
+            setArenaShape(shape) {
+                this.arenaShape = ARENA_SHAPES.includes(shape) ? shape : 'circle';
+            }
+
+            getArenaVertices(radius = this.arenaRadius) {
+                return [-Math.PI / 2, Math.PI / 6, (5 * Math.PI) / 6].map(angle => ({
+                    x: this.arenaCenter.x + Math.cos(angle) * radius,
+                    y: this.arenaCenter.y + Math.sin(angle) * radius
+                }));
+            }
+
+            drawArenaPath(radius = 340) {
+                this.ctx.beginPath();
+                if (this.arenaShape === 'circle') {
+                    this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, radius, 0, Math.PI * 2);
+                    return;
+                }
+
+                if (this.arenaShape === 'square') {
+                    const left = this.arenaCenter.x - radius;
+                    const top = this.arenaCenter.y - radius;
+                    this.ctx.rect(left, top, radius * 2, radius * 2);
+                    return;
+                }
+
+                const vertices = this.getArenaVertices(radius);
+                this.ctx.moveTo(vertices[0].x, vertices[0].y);
+                for (let i = 1; i < vertices.length; i++) {
+                    this.ctx.lineTo(vertices[i].x, vertices[i].y);
+                }
+                this.ctx.closePath();
+            }
+
+            isInsideArena(x, y, padding = 0) {
+                const dx = x - this.arenaCenter.x;
+                const dy = y - this.arenaCenter.y;
+
+                if (this.arenaShape === 'circle') {
+                    return Math.sqrt(dx * dx + dy * dy) + padding <= this.arenaRadius;
+                }
+
+                if (this.arenaShape === 'square') {
+                    return Math.max(Math.abs(dx), Math.abs(dy)) + padding <= this.arenaRadius;
+                }
+
+                const vertices = this.getArenaVertices();
+                for (let i = 0; i < vertices.length; i++) {
+                    const a = vertices[i];
+                    const b = vertices[(i + 1) % vertices.length];
+                    const edgeX = b.x - a.x;
+                    const edgeY = b.y - a.y;
+                    const edgeLength = Math.sqrt(edgeX * edgeX + edgeY * edgeY);
+                    const signedDistance = (edgeX * (y - a.y) - edgeY * (x - a.x)) / edgeLength;
+                    if (signedDistance < padding) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            getObstacleVertices(obstacle) {
+                const angle = obstacle.angle;
+                const L = obstacle.length; // Side length of the equilateral triangle
+                const x = obstacle.x;
+                const y = obstacle.y;
+
+                // Height of an equilateral triangle: H = L * sin(60deg) = L * sqrt(3) / 2
+                const H = L * Math.sqrt(3) / 2;
+                // Centroid coordinates relative to the apex and base:
+                // Apex is 2/3 * H away from the centroid
+                const r_apex = H * 2 / 3;
+                // Base is 1/3 * H away from the centroid
+                const r_base = H * 1 / 3;
+
+                const cosA = Math.cos(angle);
+                const sinA = Math.sin(angle);
+
+                // Apex pointing in the direction of the angle
+                const p0 = {
+                    x: x + r_apex * cosA,
+                    y: y + r_apex * sinA
+                };
+                // Base left (shifted by L/2 perpendicular to direction)
+                const p1 = {
+                    x: x - r_base * cosA - (L / 2) * sinA,
+                    y: y - r_base * sinA + (L / 2) * cosA
+                };
+                // Base right (shifted by L/2 perpendicular to direction)
+                const p2 = {
+                    x: x - r_base * cosA + (L / 2) * sinA,
+                    y: y - r_base * sinA - (L / 2) * cosA
+                };
+
+                return { p0, p1, p2 };
+            }
+
+            distancePointToTriangle(px, py, vertices) {
+                const d0 = this.distancePointToSegment(px, py, vertices.p0.x, vertices.p0.y, vertices.p1.x, vertices.p1.y);
+                const d1 = this.distancePointToSegment(px, py, vertices.p1.x, vertices.p1.y, vertices.p2.x, vertices.p2.y);
+                const d2 = this.distancePointToSegment(px, py, vertices.p2.x, vertices.p2.y, vertices.p0.x, vertices.p0.y);
+
+                let minHit = d0;
+                if (d1.distance < minHit.distance) minHit = d1;
+                if (d2.distance < minHit.distance) minHit = d2;
+
+                return minHit;
+            }
+
+            distancePointToSegment(px, py, ax, ay, bx, by) {
+                const abx = bx - ax;
+                const aby = by - ay;
+                const apx = px - ax;
+                const apy = py - ay;
+                const abLenSq = abx * abx + aby * aby || 1;
+                const t = Math.max(0, Math.min(1, (apx * abx + apy * aby) / abLenSq));
+                const closestX = ax + abx * t;
+                const closestY = ay + aby * t;
+                const dx = px - closestX;
+                const dy = py - closestY;
+                return {
+                    distance: Math.sqrt(dx * dx + dy * dy),
+                    nx: dx,
+                    ny: dy,
+                    closestX,
+                    closestY
+                };
+            }
+
+            segmentsIntersect(a, b, c, d) {
+                const cross = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+                const ab1 = cross(a, b, c);
+                const ab2 = cross(a, b, d);
+                const cd1 = cross(c, d, a);
+                const cd2 = cross(c, d, b);
+                return (ab1 * ab2 < 0) && (cd1 * cd2 < 0);
+            }
+
+            distanceSegmentToSegment(a, b, c, d) {
+                if (this.segmentsIntersect(a, b, c, d)) return 0;
+                return Math.min(
+                    this.distancePointToSegment(a.x, a.y, c.x, c.y, d.x, d.y).distance,
+                    this.distancePointToSegment(b.x, b.y, c.x, c.y, d.x, d.y).distance,
+                    this.distancePointToSegment(c.x, c.y, a.x, a.y, b.x, b.y).distance,
+                    this.distancePointToSegment(d.x, d.y, a.x, a.y, b.x, b.y).distance
+                );
             }
 
             addSingleMagnetCluster(x, y, owner, color) {
@@ -1532,6 +1902,19 @@
                 cluster.magnets.push(new Magnet(0, 0, owner, color));
                 this.clusters.push(cluster);
                 return cluster;
+            }
+
+            addObstacle(x, y, angle, owner) {
+                const obstacle = {
+                    x,
+                    y,
+                    angle,
+                    owner,
+                    length: OBSTACLE_LENGTH,
+                    width: OBSTACLE_WIDTH
+                };
+                this.obstacles.push(obstacle);
+                return obstacle;
             }
 
             // Resolves interactive vector forces, elastic boundaries, momentum, and snapping merges
@@ -1612,8 +1995,9 @@
                 // 3. Resolve Magnet-to-Magnet Collisions and merge clusters
                 this.resolveCollisions();
 
-                // 4. Resolve Arena Circular Boundaries
+                // 4. Resolve Arena Boundaries and static obstacles
                 this.resolveBoundaries();
+                this.resolveObstacles();
 
                 return moving;
             }
@@ -1722,62 +2106,123 @@
                 game.addLog(`[Fizik] Yapış! Oyuncu ${activePlayer} bir çarpışma tetikledi! -1 Can, ${snappedCount} taş Hane'ye eklendi.`, `log-physics`);
             }
 
-            // Standard elastic bouncing boundaries with circular table borders
+            resolveBoundaryContact(c, mag, signedDistance, inwardX, inwardY) {
+                if (signedDistance >= this.MAGNET_RADIUS) return;
+
+                const overlap = this.MAGNET_RADIUS - signedDistance;
+                c.cx += inwardX * overlap;
+                c.cy += inwardY * overlap;
+
+                const dot = c.vx * inwardX + c.vy * inwardY;
+                if (dot < 0) {
+                    c.vx = c.vx - (1 + this.RESTITUTION) * dot * inwardX;
+                    c.vy = c.vy - (1 + this.RESTITUTION) * dot * inwardY;
+
+                    const absX = c.cx + mag.rx;
+                    const absY = c.cy + mag.ry;
+                    const absHitX = absX - inwardX * this.MAGNET_RADIUS;
+                    const absHitY = absY - inwardY * this.MAGNET_RADIUS;
+                    const activeColor = mag.owner === 1 ? P1_COLOR : P2_COLOR;
+
+                    this.particles.spawnSparks(absHitX, absHitY, activeColor, 4);
+                    this.particles.spawnShockwave(absHitX, absHitY, activeColor);
+                    sound.playBounce();
+                }
+            }
+
+            // Standard elastic bouncing boundaries for circle, square, and triangle tables
             resolveBoundaries() {
                 this.clusters.forEach(c => {
                     c.magnets.forEach(mag => {
                         const absX = c.cx + mag.rx;
                         const absY = c.cy + mag.ry;
 
-                        const dx = absX - this.arenaCenter.x;
-                        const dy = absY - this.arenaCenter.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        // If magnet boundary crosses table threshold edge
-                        if (dist + this.MAGNET_RADIUS > this.arenaRadius) {
-                            const nx = dist > 0 ? dx / dist : 1; // Edge contact normal
-                            const ny = dist > 0 ? dy / dist : 0;
-
-                            // Overlap depth
-                            const overlap = (dist + this.MAGNET_RADIUS) - this.arenaRadius;
-
-                            // Push cluster center back inside
-                            c.cx -= nx * overlap;
-                            c.cy -= ny * overlap;
-
-                            // Bouncing elastic velocity reflection along normal
-                            const dot = c.vx * nx + c.vy * ny;
-                            if (dot > 0) { // Moving outwards
-                                c.vx = c.vx - (1 + this.RESTITUTION) * dot * nx;
-                                c.vy = c.vy - (1 + this.RESTITUTION) * dot * ny;
-
-                                // Spawn light spark particles and shockwaves on border
-                                const absHitX = absX - nx * this.MAGNET_RADIUS;
-                                const absHitY = absY - ny * this.MAGNET_RADIUS;
-                                const activeColor = mag.owner === 1 ? P1_COLOR : P2_COLOR;
-
-                                this.particles.spawnSparks(absHitX, absHitY, activeColor, 4);
-                                this.particles.spawnShockwave(absHitX, absHitY, activeColor);
-                                
-                                sound.playBounce();
-                            }
+                        if (this.arenaShape === 'circle') {
+                            const dx = absX - this.arenaCenter.x;
+                            const dy = absY - this.arenaCenter.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const signedDistance = this.arenaRadius - dist;
+                            this.resolveBoundaryContact(c, mag, signedDistance, -dx / dist, -dy / dist);
+                            return;
                         }
+
+                        if (this.arenaShape === 'square') {
+                            this.resolveBoundaryContact(c, mag, absX - (this.arenaCenter.x - this.arenaRadius), 1, 0);
+                            this.resolveBoundaryContact(c, mag, (this.arenaCenter.x + this.arenaRadius) - absX, -1, 0);
+                            this.resolveBoundaryContact(c, mag, absY - (this.arenaCenter.y - this.arenaRadius), 0, 1);
+                            this.resolveBoundaryContact(c, mag, (this.arenaCenter.y + this.arenaRadius) - absY, 0, -1);
+                            return;
+                        }
+
+                        const vertices = this.getArenaVertices();
+                        for (let i = 0; i < vertices.length; i++) {
+                            const a = vertices[i];
+                            const b = vertices[(i + 1) % vertices.length];
+                            const edgeX = b.x - a.x;
+                            const edgeY = b.y - a.y;
+                            const edgeLength = Math.sqrt(edgeX * edgeX + edgeY * edgeY) || 1;
+                            const inwardX = -edgeY / edgeLength;
+                            const inwardY = edgeX / edgeLength;
+                            const signedDistance = ((absX - a.x) * inwardX) + ((absY - a.y) * inwardY);
+                            this.resolveBoundaryContact(c, mag, signedDistance, inwardX, inwardY);
+                        }
+                    });
+                });
+            }
+
+            resolveObstacles() {
+                if (!this.obstacles.length) return;
+
+                this.clusters.forEach(c => {
+                    c.magnets.forEach(mag => {
+                        this.obstacles.forEach(obstacle => {
+                            const absX = c.cx + mag.rx;
+                            const absY = c.cy + mag.ry;
+                            const vertices = this.getObstacleVertices(obstacle);
+                            const hit = this.distancePointToTriangle(absX, absY, vertices);
+                            
+                            // Each line segment of the triangle has a stroke width/thickness of 8px.
+                            // So the physical collision radius of each line is 8/2 = 4px.
+                            const minDistance = this.MAGNET_RADIUS + 4;
+
+                            if (hit.distance < minDistance) {
+                                let nx = hit.nx;
+                                let ny = hit.ny;
+                                const len = Math.sqrt(nx * nx + ny * ny);
+                                if (len < 0.0001) {
+                                    nx = Math.cos(obstacle.angle);
+                                    ny = Math.sin(obstacle.angle);
+                                } else {
+                                    nx /= len;
+                                    ny /= len;
+                                }
+
+                                const overlap = minDistance - hit.distance;
+                                c.cx += nx * overlap;
+                                c.cy += ny * overlap;
+
+                                const dot = c.vx * nx + c.vy * ny;
+                                if (dot < 0) {
+                                    c.vx = c.vx - (1 + this.RESTITUTION) * dot * nx;
+                                    c.vy = c.vy - (1 + this.RESTITUTION) * dot * ny;
+                                    const color = mag.owner === 1 ? P1_COLOR : P2_COLOR;
+                                    this.particles.spawnSparks(hit.closestX, hit.closestY, color, 3);
+                                    sound.playBounce();
+                                }
+                            }
+                        });
                     });
                 });
             }
 
             // Checks whether a magnet can be safely placed at mouse location
             validatePlacement(x, y) {
-                // 1. Must be inside circular table bounds
-                const dx = x - this.arenaCenter.x;
-                const dy = y - this.arenaCenter.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist + this.MAGNET_RADIUS > this.arenaRadius) {
+                // 1. Must be inside the active table bounds
+                if (!this.isInsideArena(x, y, this.MAGNET_RADIUS)) {
                     return false;
                 }
 
-                // 2. Must not overlap/intersect with any existing magnets (distance must be > 2R)
+                // 2. Must not overlap/intersect with any existing magnets or barriers
                 for (let c of this.clusters) {
                     for (let mag of c.magnets) {
                         const absX = c.cx + mag.rx;
@@ -1793,6 +2238,74 @@
                     }
                 }
 
+                for (let obstacle of this.obstacles) {
+                    const vertices = this.getObstacleVertices(obstacle);
+                    const hit = this.distancePointToTriangle(x, y, vertices);
+                    if (hit.distance < this.MAGNET_RADIUS + 4 + 1) { // 1px spacing safety + 4px half stroke-width
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            validateObstaclePlacement(x, y, angle) {
+                const obstacle = {
+                    x,
+                    y,
+                    angle,
+                    length: OBSTACLE_LENGTH,
+                    width: OBSTACLE_WIDTH
+                };
+                const vertices = this.getObstacleVertices(obstacle);
+                const padding = 6;
+
+                if (
+                    !this.isInsideArena(vertices.p0.x, vertices.p0.y, padding) ||
+                    !this.isInsideArena(vertices.p1.x, vertices.p1.y, padding) ||
+                    !this.isInsideArena(vertices.p2.x, vertices.p2.y, padding)
+                ) {
+                    return false;
+                }
+
+                for (let c of this.clusters) {
+                    for (let mag of c.magnets) {
+                        const absX = c.cx + mag.rx;
+                        const absY = c.cy + mag.ry;
+                        const hit = this.distancePointToTriangle(absX, absY, vertices);
+                        if (hit.distance < this.MAGNET_RADIUS + 4 + 4) { // 4px spacing safety + 4px half stroke-width
+                            return false;
+                        }
+                    }
+                }
+
+                for (let existing of this.obstacles) {
+                    const existingVertices = this.getObstacleVertices(existing);
+                    
+                    const newEdges = [
+                        [vertices.p0, vertices.p1],
+                        [vertices.p1, vertices.p2],
+                        [vertices.p2, vertices.p0]
+                    ];
+                    const existingEdges = [
+                        [existingVertices.p0, existingVertices.p1],
+                        [existingVertices.p1, existingVertices.p2],
+                        [existingVertices.p2, existingVertices.p0]
+                    ];
+
+                    let minGap = Infinity;
+                    for (let edgeA of newEdges) {
+                        for (let edgeB of existingEdges) {
+                            const gap = this.distanceSegmentToSegment(edgeA[0], edgeA[1], edgeB[0], edgeB[1]);
+                            if (gap < minGap) minGap = gap;
+                        }
+                    }
+
+                    if (minGap < 10) { // 10px safe gap between obstacles
+                        return false;
+                    }
+                }
+
                 return true;
             }
 
@@ -1800,10 +2313,9 @@
             draw() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                // A. Draw Felt Circular Table Base
+                // A. Draw Felt Table Base
                 this.ctx.save();
-                this.ctx.beginPath();
-                this.ctx.arc(this.arenaCenter.x, this.arenaCenter.y, 340, 0, Math.PI * 2);
+                this.drawArenaPath(340);
                 
                 // Felt tabletop gradient
                 const feltGrad = this.ctx.createRadialGradient(
@@ -1826,8 +2338,10 @@
                 this.ctx.stroke();
                 this.ctx.restore();
 
-                // Draw Table Grid details (tactical polar grid)
+                // Draw Table Grid details clipped to the active pool shape
                 this.ctx.save();
+                this.drawArenaPath(330);
+                this.ctx.clip();
                 this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
                 this.ctx.lineWidth = 1;
                 for (let r = 50; r < 265; r += 50) {
@@ -1844,6 +2358,42 @@
                 this.ctx.lineTo(this.arenaCenter.x, this.arenaCenter.y + 330);
                 this.ctx.stroke();
                 this.ctx.restore();
+
+                // Static short-bar obstacles (rendered as triangle)
+                this.obstacles.forEach(obstacle => {
+                    const vertices = this.getObstacleVertices(obstacle);
+                    const color = obstacle.owner === 1 ? P1_COLOR : P2_COLOR;
+                    const strokeWidth = 8;
+
+                    this.ctx.save();
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
+
+                    // Outer dark shadow/outline border
+                    this.ctx.strokeStyle = 'rgba(5, 7, 14, 0.8)';
+                    this.ctx.lineWidth = strokeWidth + 5;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(vertices.p0.x, vertices.p0.y);
+                    this.ctx.lineTo(vertices.p1.x, vertices.p1.y);
+                    this.ctx.lineTo(vertices.p2.x, vertices.p2.y);
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+
+                    // Main neon stroked triangle
+                    this.ctx.strokeStyle = color;
+                    this.ctx.globalAlpha = 0.72;
+                    this.ctx.lineWidth = strokeWidth;
+                    this.ctx.shadowBlur = 12;
+                    this.ctx.shadowColor = color;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(vertices.p0.x, vertices.p0.y);
+                    this.ctx.lineTo(vertices.p1.x, vertices.p1.y);
+                    this.ctx.lineTo(vertices.p2.x, vertices.p2.y);
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                    
+                    this.ctx.restore();
+                });
 
                 // B. Draw Clusters & Magnets
                 this.clusters.forEach(c => {
@@ -1939,6 +2489,7 @@
             // Resets all elements
             clear() {
                 this.clusters = [];
+                this.obstacles = [];
                 this.clusterIdCounter = 0;
             }
         }
@@ -1956,11 +2507,14 @@
 
                 // Game Elements DOM links
                 this.canvas = document.getElementById('game-canvas');
+                this.arenaEl = document.querySelector('.arena-container');
                 this.lblTurn = document.getElementById('turn-banner');
                 this.lblScoreP1 = document.getElementById('score-p1');
                 this.lblScoreP2 = document.getElementById('score-p2');
                 this.lblPool = document.getElementById('pool-count');
                 this.barPool = document.getElementById('pool-bar-fill');
+                this.lblPoolShape = document.getElementById('pool-shape-label');
+                this.lblObstacleStatus = document.getElementById('obstacle-status');
                 this.logBox = document.getElementById('log-box');
                 this.btnMute = document.getElementById('btn-mute');
                 this.muteIcon = document.getElementById('mute-icon');
@@ -1978,10 +2532,19 @@
                 this.p2Hane = 0;
                 this.turnCounter = 0;
                 this.interactionEnabled = false;
+                this.gameOver = false;
+                this.arenaShape = 'circle';
+                this.nextArenaShape = null;
+                this.playerPlacedCounts = { 1: 0, 2: 0 };
+                this.pendingObstaclePlayer = null;
+                this.obstacleMode = false;
+                this.obstacleAngle = 0;
 
                 // Mouse Position Tracking for visual Ghost Hover and Spring Vector Field overlays
                 this.mousePos = { x: 0, y: 0 };
                 this.mouseOnCanvas = false;
+                this.lastTouchTime = 0;
+                this.lastPlacementTime = 0;
 
                 // Online Multiplayer State
                 this.isOnline = false;
@@ -2140,6 +2703,10 @@
                     }
                 });
 
+                document.getElementById('btn-home').addEventListener('click', () => {
+                    this.returnToHome();
+                });
+
                 this.btnMute.addEventListener('click', () => {
                     const isMuted = sound.toggleMute();
                     this.updateMuteUI(isMuted);
@@ -2156,15 +2723,7 @@
 
                 // Game Over - Ana Sayfaya Dön
                 document.getElementById('btn-gameover-home').addEventListener('click', () => {
-                    this.scrGameOver.classList.add('hidden');
-                    this.scrGame.classList.add('hidden');
-                    this.scrStart.classList.remove('hidden');
-                    document.getElementById('online-lobby-panel').classList.add('hidden');
-                    document.getElementById('main-menu-buttons').classList.remove('hidden');
-                    if (this.socket) {
-                        this.socket.disconnect();
-                        this.socket = null;
-                    }
+                    this.returnToHome();
                 });
 
                 // Board clicks & hover previews
@@ -2174,10 +2733,12 @@
                     this.mousePos.x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
                     this.mousePos.y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
                     this.mouseOnCanvas = true;
+                    this.canvas.classList.toggle('pool-hover-shake', this.physics.isInsideArena(this.mousePos.x, this.mousePos.y, 0));
                 });
 
                 this.canvas.addEventListener('mouseleave', () => {
                     this.mouseOnCanvas = false;
+                    this.canvas.classList.remove('pool-hover-shake');
                 });
 
                 this.canvas.addEventListener('mouseenter', () => {
@@ -2188,16 +2749,19 @@
 
                 this.canvas.addEventListener('click', (e) => {
                     if (!this.interactionEnabled || this.simulating) return;
+                    if (Date.now() - this.lastTouchTime < 450) return;
+                    if (Date.now() - this.lastPlacementTime < 550) return;
                     
-                    // Online ise sırayı kontrol et
-                    if (this.isOnline) {
-                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
-                        if (!isMyTurn) return;
-                    }
+                    if (!this.canCurrentClientAct()) return;
 
                     const rect = this.canvas.getBoundingClientRect();
                     const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
                     const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+                    if (this.obstacleMode) {
+                        this.handleObstaclePlacementAttempt(x, y);
+                        return;
+                    }
 
                     if (this.physics.validatePlacement(x, y)) {
                         if (this.isOnline) {
@@ -2215,15 +2779,22 @@
                     }
                 });
 
+                this.canvas.addEventListener('wheel', (e) => {
+                    if (!this.interactionEnabled || this.simulating || !this.obstacleMode) return;
+                    if (!this.canCurrentClientAct()) return;
+
+                    e.preventDefault();
+                    const step = Math.PI / 18;
+                    this.obstacleAngle += e.deltaY > 0 ? step : -step;
+                    this.obstacleAngle = (this.obstacleAngle + Math.PI * 2) % (Math.PI * 2);
+                    this.updateUI();
+                }, { passive: false });
+
                 // Unified Touch Events support for mobile/tablets
                 const handleTouchStartOrMove = (e) => {
                     if (!this.interactionEnabled || this.simulating) return;
                     
-                    // Online ise sırayı kontrol et
-                    if (this.isOnline) {
-                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
-                        if (!isMyTurn) return;
-                    }
+                    if (!this.canCurrentClientAct()) return;
 
                     e.preventDefault(); // Prevent scrolling/zoom
                     if (e.touches.length > 0) {
@@ -2232,6 +2803,7 @@
                         this.mousePos.x = (touch.clientX - rect.left) * (this.canvas.width / rect.width);
                         this.mousePos.y = (touch.clientY - rect.top) * (this.canvas.height / rect.height);
                         this.mouseOnCanvas = true;
+                        this.canvas.classList.toggle('pool-hover-shake', this.physics.isInsideArena(this.mousePos.x, this.mousePos.y, 0));
                     }
                 };
 
@@ -2240,18 +2812,22 @@
 
                 this.canvas.addEventListener('touchend', (e) => {
                     if (!this.interactionEnabled || this.simulating) return;
+                    if (Date.now() - this.lastPlacementTime < 550) return;
                     
-                    // Online ise sırayı kontrol et
-                    if (this.isOnline) {
-                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
-                        if (!isMyTurn) return;
-                    }
+                    if (!this.canCurrentClientAct()) return;
 
                     e.preventDefault();
+                    this.lastTouchTime = Date.now();
                     this.mouseOnCanvas = false;
+                    this.canvas.classList.remove('pool-hover-shake');
 
                     const x = this.mousePos.x;
                     const y = this.mousePos.y;
+
+                    if (this.obstacleMode) {
+                        this.handleObstaclePlacementAttempt(x, y);
+                        return;
+                    }
 
                     if (this.physics.validatePlacement(x, y)) {
                         if (this.isOnline) {
@@ -2284,6 +2860,120 @@
                 document.querySelectorAll('.card-p1, .card-p2, .pool-card').forEach(card => {
                     card.addEventListener('click', triggerBoardHint);
                 });
+            }
+
+            randomArenaShape() {
+                return ARENA_SHAPES[Math.floor(Math.random() * ARENA_SHAPES.length)];
+            }
+
+            setArenaShape(shape) {
+                this.arenaShape = ARENA_SHAPES.includes(shape) ? shape : this.randomArenaShape();
+                this.physics.setArenaShape(this.arenaShape);
+
+                ARENA_SHAPES.forEach(shapeName => {
+                    this.canvas.classList.remove(`shape-${shapeName}`);
+                    this.arenaEl.classList.remove(`shape-${shapeName}`);
+                });
+                this.canvas.classList.add(`shape-${this.arenaShape}`);
+                this.arenaEl.classList.add(`shape-${this.arenaShape}`);
+            }
+
+            canCurrentClientAct() {
+                if (!this.isOnline) return true;
+                return (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+            }
+
+            returnToHome() {
+                this.interactionEnabled = false;
+                this.simulating = false;
+                this.obstacleMode = false;
+                this.pendingObstaclePlayer = null;
+                this.canvas.classList.remove('pool-hover-shake');
+                sound.stopAmbient();
+
+                this.scrGameOver.classList.add('hidden');
+                this.scrGame.classList.add('hidden');
+                this.scrStart.classList.remove('hidden');
+                document.getElementById('online-lobby-panel').classList.add('hidden');
+                document.getElementById('waiting-panel').classList.add('hidden');
+                document.getElementById('main-menu-buttons').classList.remove('hidden');
+                document.getElementById('disconnect-modal').classList.add('hidden');
+                document.getElementById('restart-confirm-modal').classList.add('hidden');
+
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
+                this.isOnline = false;
+                this.myRole = 'local';
+                this.roomCode = null;
+            }
+
+            syncTurnGlow() {
+                if (this.activePlayer === 1) {
+                    document.getElementById('glow-left').style.opacity = '0.25';
+                    document.getElementById('glow-right').style.opacity = '0.05';
+                } else {
+                    document.getElementById('glow-left').style.opacity = '0.05';
+                    document.getElementById('glow-right').style.opacity = '0.25';
+                }
+            }
+
+            advanceTurn() {
+                this.obstacleMode = false;
+                this.pendingObstaclePlayer = null;
+                this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+                this.syncTurnGlow();
+                this.addLog(`[Sistem] Sıra Oyuncu ${this.activePlayer}'de.`,
+                    this.activePlayer === 1 ? 'log-p1' : 'log-p2'
+                );
+            }
+
+            shouldGrantObstacle(player) {
+                return this.playerPlacedCounts[player] > 0 && this.playerPlacedCounts[player] % 5 === 0;
+            }
+
+            enterObstacleMode() {
+                this.obstacleMode = true;
+                this.pendingObstaclePlayer = this.activePlayer;
+                this.obstacleAngle = this.activePlayer === 1 ? 0 : Math.PI / 2;
+                this.addLog(`[Sistem] Oyuncu ${this.activePlayer} engel hakkı kazandı.`, 'log-system');
+            }
+
+            handleObstaclePlacementAttempt(x, y) {
+                if (!this.obstacleMode || this.pendingObstaclePlayer !== this.activePlayer) return;
+
+                if (!this.physics.validateObstaclePlacement(x, y, this.obstacleAngle)) {
+                    sound.playBounce();
+                    this.addLog(`[Sistem] Geçersiz engel konumu.`, 'log-system');
+                    return;
+                }
+
+                if (this.isOnline) {
+                    this.socket.emit('place_obstacle', {
+                        roomCode: this.roomCode,
+                        x,
+                        y,
+                        angle: this.obstacleAngle
+                    });
+                }
+                this.placeObstacle(x, y, this.obstacleAngle);
+            }
+
+            placeObstacle(x, y, angle) {
+                this.lastPlacementTime = Date.now();
+                this.physics.addObstacle(x, y, angle, this.activePlayer);
+                const color = this.activePlayer === 1 ? P1_COLOR : P2_COLOR;
+                this.particles.spawnSparks(x, y, color, 10);
+                sound.playClack();
+                this.addLog(`[Player ${this.activePlayer}] Engel yerleştirildi.`,
+                    this.activePlayer === 1 ? 'log-p1' : 'log-p2'
+                );
+
+                this.obstacleMode = false;
+                this.pendingObstaclePlayer = null;
+                this.advanceTurn();
+                this.updateUI();
             }
 
             connectSocket() {
@@ -2347,10 +3037,11 @@
                         this.hideWaitingPanel();
                     });
 
-                    this.socket.on('start_online_game', ({ roomCode, playerRole }) => {
+                    this.socket.on('start_online_game', ({ roomCode, playerRole, arenaShape }) => {
                         this.isOnline = true;
                         this.roomCode = roomCode;
                         this.myRole = playerRole; // 'p1' or 'p2'
+                        this.nextArenaShape = arenaShape || null;
                         
                         this.hideWaitingPanel();
                         this.startGame();
@@ -2360,12 +3051,17 @@
                         this.placeMagnet(x, y);
                     });
 
+                    this.socket.on('opponent_placed_obstacle', ({ x, y, angle }) => {
+                        this.placeObstacle(x, y, angle);
+                    });
+
                     this.socket.on('opponent_restart_request', () => {
                         document.getElementById('restart-confirm-modal').classList.remove('hidden');
                     });
 
-                    this.socket.on('restart_game', () => {
+                    this.socket.on('restart_game', ({ arenaShape } = {}) => {
                         document.getElementById('restart-confirm-modal').classList.add('hidden');
+                        this.nextArenaShape = arenaShape || null;
                         this.restartGame();
                     });
 
@@ -2417,12 +3113,15 @@
                 this.scrStart.classList.add('hidden');
                 this.scrGame.classList.remove('hidden');
                 this.scrGameOver.classList.add('hidden');
+                sound.startAmbient();
                 this.restartGame();
             }
 
             restartGame() {
                 this.physics.clear();
                 this.particles.clear();
+                this.setArenaShape(this.nextArenaShape || (this.isOnline ? this.arenaShape : this.randomArenaShape()));
+                this.nextArenaShape = null;
                 
                 this.activePlayer = 1;
                 this.simulating = false;
@@ -2432,17 +3131,24 @@
                 this.p2Hane = 0;
                 this.turnCounter = 0;
                 this.interactionEnabled = true;
+                this.gameOver = false;
+                this.playerPlacedCounts = { 1: 0, 2: 0 };
+                this.pendingObstaclePlayer = null;
+                this.obstacleMode = false;
+                this.obstacleAngle = 0;
                 this.mouseOnCanvas = false;
+                this.canvas.classList.remove('pool-hover-shake');
+                sound.startAmbient();
 
                 // Reset Action Logs
                 if (this.isOnline) {
-                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Çevrimiçi oyun başladı. Sıra Oyuncu 1'de.</div>`;
+                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Çevrimiçi oyun başladı. Pool: ${ARENA_LABELS[this.arenaShape]}.</div>`;
                     
                     // Update sidebars for who is who
                     document.querySelector('.card-p1 .card-title').innerText = this.myRole === 'p1' ? 'SİZ (PLAYER 1)' : 'RAKİP (PLAYER 1)';
                     document.querySelector('.card-p2 .card-title').innerText = this.myRole === 'p2' ? 'SİZ (PLAYER 2)' : 'RAKİP (PLAYER 2)';
                 } else {
-                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Oyun yüklendi. Oyuncu 1 yerleştirmeye başladı.</div>`;
+                    this.logBox.innerHTML = `<div class="log-entry log-system">[Sistem] Oyun yüklendi. Pool: ${ARENA_LABELS[this.arenaShape]}.</div>`;
                     
                     document.querySelector('.card-p1 .card-title').innerText = 'Player 1';
                     document.querySelector('.card-p2 .card-title').innerText = 'Player 2';
@@ -2475,6 +3181,7 @@
             }
 
             placeMagnet(x, y) {
+                this.lastPlacementTime = Date.now();
                 const color = STONE_COLOR;
                 this.physics.addSingleMagnetCluster(x, y, this.activePlayer, color);
                 
@@ -2485,6 +3192,8 @@
                     this.activePlayer === 1 ? 'log-p1' : 'log-p2'
                 );
 
+                this.playerPlacedCounts[this.activePlayer]++;
+                this.pendingObstaclePlayer = this.shouldGrantObstacle(this.activePlayer) ? this.activePlayer : null;
                 this.turnCounter++;
 
                 // Lock clicks immediately for physics updates
@@ -2521,14 +3230,33 @@
                 // Progress bar fill scales relative to a crowding factor (e.g. 15 magnets)
                 const percentage = Math.min((totalOnBoard / 15) * 100, 100);
                 this.barPool.style.width = `${percentage}%`;
+                this.lblPoolShape.innerText = `${ARENA_LABELS[this.arenaShape]} POOL`;
+
+                const activeProgress = this.playerPlacedCounts[this.activePlayer] % 5;
+                if (this.obstacleMode) {
+                    const angle = Math.round((this.obstacleAngle * 180 / Math.PI) % 360);
+                    this.lblObstacleStatus.innerText = `ENGEL AÇISI: ${angle}°`;
+                    this.lblObstacleStatus.classList.add('active');
+                } else {
+                    this.lblObstacleStatus.innerText = `ENGEL HAKKI: ${activeProgress} / 5`;
+                    this.lblObstacleStatus.classList.remove('active');
+                }
 
                 // Handle turn header banner text changes
                 if (this.simulating) {
                     this.lblTurn.innerText = "SİMÜLASYON HESAPLANIYOR...";
                     this.lblTurn.className = "glass-panel turn-banner turn-simulating";
+                } else if (this.obstacleMode) {
+                    if (this.isOnline) {
+                        const isMyTurn = this.canCurrentClientAct();
+                        this.lblTurn.innerText = isMyTurn ? `ENGEL HAKKI SİZDE (OYUNCU ${this.activePlayer})` : `RAKİP ENGEL YERLEŞTİRİYOR`;
+                    } else {
+                        this.lblTurn.innerText = `OYUNCU ${this.activePlayer} ENGEL YERLEŞTİRİYOR`;
+                    }
+                    this.lblTurn.className = "glass-panel turn-banner turn-simulating";
                 } else {
                     if (this.isOnline) {
-                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
+                        const isMyTurn = this.canCurrentClientAct();
                         this.lblTurn.innerText = isMyTurn ? `SIRA SİZDE (OYUNCU ${this.activePlayer})` : `SIRA RAKİPTE (OYUNCU ${this.activePlayer})`;
                     } else {
                         this.lblTurn.innerText = `OYUNCU ${this.activePlayer}'İN SIRASI`;
@@ -2537,7 +3265,7 @@
                 }
 
                 // Check active game over states
-                this.checkGameOver(largestClusterSize);
+                return this.checkGameOver(largestClusterSize);
             }
 
             renderLivesUI() {
@@ -2581,8 +3309,12 @@
                 }
 
                 // If Game Over, transition screens
-                if (isGameOver) {
+                if (isGameOver && !this.gameOver) {
+                    this.gameOver = true;
                     this.interactionEnabled = false;
+                    this.obstacleMode = false;
+                    this.pendingObstaclePlayer = null;
+                    sound.stopAmbient();
                     
                     const winnerColor = winner === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
                     const loserColor = loser === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
@@ -2610,6 +3342,8 @@
                         else sound.playLose();
                     }, 1200);
                 }
+
+                return isGameOver || this.gameOver;
             }
 
             // Master Animation Loop
@@ -2624,28 +3358,16 @@
                     // Once all magnets settle to zero velocity
                     if (!isMoving) {
                         this.simulating = false;
-                        
-                        // Switch active player turns
-                        this.activePlayer = this.activePlayer === 1 ? 2 : 1;
-                        this.updateUI();
+                        const ended = this.updateUI();
 
-                        // Soft animated background glow shifts
-                        if (this.activePlayer === 1) {
-                            document.getElementById('glow-left').style.opacity = '0.25';
-                            document.getElementById('glow-right').style.opacity = '0.05';
-                        } else {
-                            document.getElementById('glow-left').style.opacity = '0.05';
-                            document.getElementById('glow-right').style.opacity = '0.25';
-                        }
-
-                        if (this.isOnline) {
-                            this.addLog(`[Sistem] Sıra Oyuncu ${this.activePlayer}'de.`, 
-                                this.activePlayer === 1 ? 'log-p1' : 'log-p2'
-                            );
-                        } else {
-                            this.addLog(`[Sistem] Sıra Oyuncu ${this.activePlayer}'de.`, 
-                                this.activePlayer === 1 ? 'log-p1' : 'log-p2'
-                            );
+                        if (!ended) {
+                            if (this.pendingObstaclePlayer === this.activePlayer) {
+                                this.enterObstacleMode();
+                                this.updateUI();
+                            } else {
+                                this.advanceTurn();
+                                this.updateUI();
+                            }
                         }
                     }
                 }
@@ -2655,12 +3377,7 @@
 
                 // Draw Overlay Hover tactical previews if active placement is allowed
                 if (this.interactionEnabled && !this.simulating && this.mouseOnCanvas) {
-                    if (this.isOnline) {
-                        const isMyTurn = (this.activePlayer === 1 && this.myRole === 'p1') || (this.activePlayer === 2 && this.myRole === 'p2');
-                        if (isMyTurn) {
-                            this.drawCanvasOverlay();
-                        }
-                    } else {
+                    if (this.canCurrentClientAct()) {
                         this.drawCanvasOverlay();
                     }
                 }
@@ -2672,6 +3389,44 @@
                 const mX = this.mousePos.x;
                 const mY = this.mousePos.y;
                 const activeColor = this.activePlayer === 1 ? P1_COLOR : P2_COLOR;
+
+                if (this.obstacleMode) {
+                    const isValidObstacle = this.physics.validateObstaclePlacement(mX, mY, this.obstacleAngle);
+                    const obstacle = {
+                        x: mX,
+                        y: mY,
+                        angle: this.obstacleAngle,
+                        length: OBSTACLE_LENGTH,
+                        width: OBSTACLE_WIDTH
+                    };
+                    const vertices = this.physics.getObstacleVertices(obstacle);
+                    const color = isValidObstacle ? GOLD_COLOR : P2_COLOR;
+                    const strokeWidth = 8;
+
+                    ctx.save();
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.globalAlpha = isValidObstacle ? 0.8 : 0.45;
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = strokeWidth;
+                    ctx.shadowBlur = 16;
+                    ctx.shadowColor = color;
+                    ctx.beginPath();
+                    ctx.moveTo(vertices.p0.x, vertices.p0.y);
+                    ctx.lineTo(vertices.p1.x, vertices.p1.y);
+                    ctx.lineTo(vertices.p2.x, vertices.p2.y);
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    ctx.globalAlpha = 0.65;
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([5, 6]);
+                    ctx.beginPath();
+                    ctx.arc(mX, mY, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                    return;
+                }
 
                 const isValid = this.physics.validatePlacement(mX, mY);
 
@@ -2750,6 +3505,7 @@
         let game;
         window.addEventListener('load', () => {
             game = new GameController();
+            window.game = game;
 
             // Set animation ticks
             function animate() {

@@ -23,6 +23,11 @@ app.get('/', (req, res) => {
 // Game state storage
 const rooms = {}; // roomCode -> { p1: socketId, p2: socketId, players: { [socketId]: 'p1'|'p2' } }
 let matchmakingQueue = []; // Array of socket IDs waiting for a match
+const arenaShapes = ['circle', 'square', 'triangle'];
+
+function randomArenaShape() {
+    return arenaShapes[Math.floor(Math.random() * arenaShapes.length)];
+}
 
 io.on('connection', (socket) => {
     console.log(`[Socket] User connected: ${socket.id}`);
@@ -61,6 +66,7 @@ io.on('connection', (socket) => {
         rooms[roomCode] = {
             p1: socket.id,
             p2: null,
+            arenaShape: randomArenaShape(),
             players: { [socket.id]: 'p1' }
         };
 
@@ -96,12 +102,14 @@ io.on('connection', (socket) => {
         io.to(room.p1).emit('start_online_game', {
             roomCode: roomCode,
             playerRole: 'p1',
+            arenaShape: room.arenaShape,
             opponentId: room.p2
         });
 
         io.to(room.p2).emit('start_online_game', {
             roomCode: roomCode,
             playerRole: 'p2',
+            arenaShape: room.arenaShape,
             opponentId: room.p1
         });
     });
@@ -134,6 +142,7 @@ io.on('connection', (socket) => {
             rooms[roomCode] = {
                 p1: opponentId,
                 p2: socket.id,
+                arenaShape: randomArenaShape(),
                 players: { [opponentId]: 'p1', [socket.id]: 'p2' }
             };
 
@@ -146,12 +155,14 @@ io.on('connection', (socket) => {
             io.to(opponentId).emit('start_online_game', {
                 roomCode: roomCode,
                 playerRole: 'p1',
+                arenaShape: rooms[roomCode].arenaShape,
                 opponentId: socket.id
             });
 
             io.to(socket.id).emit('start_online_game', {
                 roomCode: roomCode,
                 playerRole: 'p2',
+                arenaShape: rooms[roomCode].arenaShape,
                 opponentId: opponentId
             });
 
@@ -175,6 +186,11 @@ io.on('connection', (socket) => {
         socket.to(roomCode).emit('opponent_placed_magnet', { x, y });
     });
 
+    socket.on('place_obstacle', ({ roomCode, x, y, angle }) => {
+        console.log(`[Sync] Obstacle placed in room ${roomCode} by ${socket.id} at (${x}, ${y}) angle ${angle}`);
+        socket.to(roomCode).emit('opponent_placed_obstacle', { x, y, angle });
+    });
+
     // 6. Sync Restart Request
     socket.on('restart_request', ({ roomCode }) => {
         console.log(`[Sync] Restart requested in room ${roomCode} by ${socket.id}`);
@@ -184,7 +200,12 @@ io.on('connection', (socket) => {
     // 7. Sync Restart Confirmation
     socket.on('restart_confirm', ({ roomCode }) => {
         console.log(`[Sync] Restart confirmed in room ${roomCode}. Resetting board.`);
-        io.to(roomCode).emit('restart_game');
+        if (rooms[roomCode]) {
+            rooms[roomCode].arenaShape = randomArenaShape();
+        }
+        io.to(roomCode).emit('restart_game', {
+            arenaShape: rooms[roomCode] ? rooms[roomCode].arenaShape : randomArenaShape()
+        });
     });
 
     // 8. Disconnect
