@@ -1249,8 +1249,8 @@
         const STONE_GLOW = 'rgba(255, 255, 255, 0.4)';
         const ARENA_SHAPES = ['circle', 'square', 'triangle'];
         const ARENA_LABELS = { circle: 'DAIRE', square: 'KARE', triangle: 'UCGEN' };
-        const OBSTACLE_LENGTH = 96;
-        const OBSTACLE_WIDTH = 32;
+        const OBSTACLE_LENGTH = 60;
+        const OBSTACLE_WIDTH = 20;
 
         /* ==========================================================================
            A. AUDIO SYNTHESIZER (WEB AUDIO API)
@@ -2205,8 +2205,6 @@
                                 if (dot < 0) {
                                     c.vx = c.vx - (1 + this.RESTITUTION) * dot * nx;
                                     c.vy = c.vy - (1 + this.RESTITUTION) * dot * ny;
-                                    const color = mag.owner === 1 ? P1_COLOR : P2_COLOR;
-                                    this.particles.spawnSparks(hit.closestX, hit.closestY, color, 3);
                                     sound.playBounce();
                                 }
                             }
@@ -2301,7 +2299,7 @@
                         }
                     }
 
-                    if (minGap < 10) { // 10px safe gap between obstacles
+                    if (minGap < 18) { // 10px true physical/visual gap (10px gap + 2 * 4px half-stroke-width)
                         return false;
                     }
                 }
